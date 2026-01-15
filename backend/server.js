@@ -508,7 +508,7 @@ iniciarServidor()
       console.log(`\n🔍 ENDPOINTS DE DIAGNÓSTICO:`);
       console.log(`   📊 Database:    http://localhost:${PORT}/api/debug/database`);
       console.log(`   🚗 Lavadores:   http://localhost:${PORT}/api/debug/lavadores`);
-      console.log(`   💰 Comisiones:  http://localhost:${Port}/api/debug/comisiones`);
+      console.log(`   💰 Comisiones:  http://localhost:${PORT}/api/debug/comisiones`);
       console.log(`   ❤️  Health:      http://localhost:${PORT}/api/health`);
       console.log(`\n✅ SISTEMA DE COMISIONES ACTIVO - 40% FIJO`);
       console.log(`\n🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
