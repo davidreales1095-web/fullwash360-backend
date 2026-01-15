@@ -2,7 +2,7 @@ import axios from 'axios';
 import lavadoresApi from './lavadoresApi';
 import dayjs from 'dayjs';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://fullwash360-backend.onrender.com/api';
 
 const ordenesApi = {
   // ✅ CREAR NUEVA ORDEN - CORREGIDO

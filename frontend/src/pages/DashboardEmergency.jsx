@@ -21,7 +21,7 @@ const DashboardEmergency = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/orders/stats', {
+      const response = await fetch('https://fullwash360-backend.onrender.com/api/orders/stats', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();

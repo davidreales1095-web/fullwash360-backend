@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // URL fija para desarrollo - NO usar process.env sin configuración previa
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://fullwash360-backend.onrender.com";
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api/orders`, // apunta a /api/orders

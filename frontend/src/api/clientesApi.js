@@ -1,7 +1,7 @@
 // src/api/clienteApi.js - VERSIÓN SIMPLIFICADA SIN INTERCEPTORES COMPLEJOS
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/clientes';
+const API_URL = 'https://fullwash360-backend.onrender.com/api/clientes';
 
 // Configuración SIMPLE de axios
 const clienteApi = axios.create({

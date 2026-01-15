@@ -7,7 +7,7 @@ const CONFIG = {
   USUARIO_ID: '000000000000000000000001',
   
   // URL del backend
-  API_URL: 'http://localhost:5000/api',
+  API_URL: 'https://fullwash360-backend.onrender.com/api',
   
   // Precios por defecto (por si el backend no responde)
   PRECIOS_DEFAULT: {
