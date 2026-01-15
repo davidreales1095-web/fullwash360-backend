@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/layout/PrivateRoute';
 import Login from './pages/Login';
@@ -62,12 +62,12 @@ const WelcomePage = () => {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '25px' }}>
-            <a href="/login" style={{ background: '#1890ff', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: '500', display: 'inline-block', textAlign: 'center' }}>
+            <Link to="/login" style={{ background: '#1890ff', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: '500', display: 'inline-block', textAlign: 'center' }}>
               🔐 Ir al Login
-            </a>
-            <a href="/dashboard" style={{ background: '#52c41a', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: '500', display: 'inline-block', textAlign: 'center' }}>
+            </Link>
+            <Link to="/dashboard" style={{ background: '#52c41a', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: '500', display: 'inline-block', textAlign: 'center' }}>
               📊 Dashboard PRINCIPAL
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -84,8 +84,8 @@ const NotFoundPage = () => {
         <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#0c4a6e', marginBottom: '10px' }}>404 - Página no encontrada</h1>
         <p style={{ color: '#64748b', marginBottom: '30px', fontSize: '16px' }}>La página que estás buscando no existe.</p>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="/" style={{ background: '#1890ff', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: '500', display: 'inline-block' }}>🏠 Inicio</a>
-          <a href="/dashboard" style={{ background: '#52c41a', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: '500', display: 'inline-block' }}>📊 Dashboard</a>
+          <Link to="/" style={{ background: '#1890ff', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: '500', display: 'inline-block' }}>🏠 Inicio</Link>
+          <Link to="/dashboard" style={{ background: '#52c41a', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: '500', display: 'inline-block' }}>📊 Dashboard</Link>
         </div>
       </div>
     </div>
@@ -101,7 +101,7 @@ const PlaceholderPage = ({ title }) => {
         <div style={{ fontSize: '64px', marginBottom: '24px' }}>🚧</div>
         <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px' }}>Módulo en Desarrollo</h2>
         <p style={{ color: '#666', marginBottom: '24px' }}>Este módulo está siendo desarrollado y estará disponible pronto.</p>
-        <a href="/dashboard" style={{ background: '#1890ff', color: 'white', padding: '10px 20px', borderRadius: '6px', textDecoration: 'none', fontWeight: '500', display: 'inline-block' }}>Volver al Dashboard</a>
+        <Link to="/dashboard" style={{ background: '#1890ff', color: 'white', padding: '10px 20px', borderRadius: '6px', textDecoration: 'none', fontWeight: '500', display: 'inline-block' }}>Volver al Dashboard</Link>
       </div>
     </div>
   );
