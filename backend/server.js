@@ -1,4 +1,4 @@
-// backend/SERVER.JS - VERSIÓN CORREGIDA
+// backend/server.js - VERSIÓN CORREGIDA
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -9,8 +9,9 @@ const app = express();
 // ======================
 // 1. MIDDLEWARES
 // ======================
+// CAMBIO 1: CORS para permitir Vercel y local
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: ['https://fullwash360.vercel.app', 'http://localhost:3000'],
   credentials: true
 }));
 app.use(express.json());
@@ -425,8 +426,17 @@ async function iniciarServidor() {
       timestamp: new Date().toISOString()
     });
   });
+
+  // CAMBIO 2: Ruta de prueba simple para Render
+  app.get('/api/test', (req, res) => {
+    res.json({ 
+      message: 'Backend FullWash 360 funcionando',
+      environment: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString()
+    });
+  });
   
-  // 9. Ruta principal
+  // 10. Ruta principal
   app.get('/', (req, res) => {
     res.json({
       message: '🚗 FullWash 360 API',
@@ -455,7 +465,7 @@ async function iniciarServidor() {
     });
   });
   
-  // 10. Manejo de errores
+  // 11. Manejo de errores
   app.use((req, res) => {
     res.status(404).json({
       success: false,
@@ -479,7 +489,7 @@ async function iniciarServidor() {
     });
   });
   
-  // 11. Iniciar servidor
+  // 12. Iniciar servidor
   const PORT = process.env.PORT || 5000;
   
   app.listen(PORT, () => {
