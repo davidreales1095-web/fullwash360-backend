@@ -1,4 +1,4 @@
-// backend/server.js - VERSIÓN PARA VERCEL
+// backend/server.js - VERSIÓN PARA RENDER
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -9,9 +9,18 @@ const app = express();
 // ======================
 // 1. MIDDLEWARES
 // ======================
-// CORS para permitir Vercel y local
+// CORS para permitir Frontend (Vercel) y local
+const allowedOrigins = [
+  'https://fullwash360.vercel.app',
+  'http://localhost:3000'
+];
+
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-  origin: ['https://fullwash360.vercel.app', 'http://localhost:3000'],
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json());
@@ -22,7 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 // ======================
 console.log('🔗 Conectando a MongoDB...');
 
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/fullwash360;';
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/fullwash360';
 console.log('URI:', mongoURI);
 
 async function connectToDatabase() {
@@ -43,6 +52,7 @@ async function connectToDatabase() {
   } catch (err) {
     console.error('❌ Error conectando a MongoDB:', err.message);
     
+    // Intentar conectar sin punto y coma si falla
     if (mongoURI.includes(';')) {
       console.log('🔄 Intentando conexión sin punto y coma...');
       const mongoURISinPuntoComa = mongoURI.replace(';', '');
@@ -378,7 +388,7 @@ async function configurarApp() {
     });
   });
 
-  // Ruta de prueba para Vercel
+  // Ruta de prueba
   app.get('/api/test', (req, res) => {
     res.json({ 
       message: 'Backend FullWash 360 funcionando',
@@ -477,63 +487,35 @@ async function iniciarServidor() {
 }
 
 // ======================
-// 7. MANEJO PARA VERCEL vs DESARROLLO LOCAL
+// 7. INICIAR SERVIDOR PARA RENDER
 // ======================
-if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
-  // Para Vercel: Exportar como función serverless
-  console.log('🌐 Modo Vercel (serverless) detectado');
-  
-  // Inicializar y exportar la app
-  let appPromise = iniciarServidor().catch(err => {
-    console.error('❌ Error fatal al iniciar en Vercel:', err);
-    // Devolver una app básica que muestre error
-    const errorApp = express();
-    errorApp.use((req, res) => {
-      res.status(500).json({
-        error: 'Servicio no disponible',
-        message: 'El backend no pudo iniciar correctamente'
-      });
+
+// Render ejecutará: node server.js
+const PORT = process.env.PORT || 5000;
+
+iniciarServidor()
+  .then(app => {
+    app.listen(PORT, () => {
+      console.log(`\n🚀 Servidor FullWash 360 iniciado en puerto ${PORT}`);
+      console.log(`🌐 URL: http://localhost:${PORT}`);
+      console.log(`\n📊 ENDPOINTS PRINCIPALES:`);
+      console.log(`   🔐 Auth:        http://localhost:${PORT}/api/auth`);
+      console.log(`   👥 Users:       http://localhost:${PORT}/api/users`);
+      console.log(`   🚗 Orders:      http://localhost:${PORT}/api/orders`);
+      console.log(`   👤 Clientes:    http://localhost:${PORT}/api/clientes`);
+      console.log(`   📈 Reportes:    http://localhost:${PORT}/api/reportes`);
+      console.log(`   👥 Lavadores:   http://localhost:${PORT}/api/lavadores`);
+      console.log(`\n🔍 ENDPOINTS DE DIAGNÓSTICO:`);
+      console.log(`   📊 Database:    http://localhost:${PORT}/api/debug/database`);
+      console.log(`   🚗 Lavadores:   http://localhost:${PORT}/api/debug/lavadores`);
+      console.log(`   💰 Comisiones:  http://localhost:${Port}/api/debug/comisiones`);
+      console.log(`   ❤️  Health:      http://localhost:${PORT}/api/health`);
+      console.log(`\n✅ SISTEMA DE COMISIONES ACTIVO - 40% FIJO`);
+      console.log(`\n🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🌐 Frontend permitido: https://fullwash360.vercel.app`);
     });
-    return errorApp;
+  })
+  .catch(err => {
+    console.error('❌ No se pudo iniciar el servidor:', err);
+    process.exit(1);
   });
-  
-  // Exportar handler para Vercel
-  module.exports = async (req, res) => {
-    try {
-      const app = await appPromise;
-      return app(req, res);
-    } catch (error) {
-      console.error('Error en handler Vercel:', error);
-      res.status(500).json({ error: 'Error interno del servidor' });
-    }
-  };
-  
-} else {
-  // Para desarrollo local
-  const PORT = process.env.PORT || 5000;
-  
-  iniciarServidor()
-    .then(app => {
-      app.listen(PORT, () => {
-        console.log(`\n🚀 Servidor FullWash 360 iniciado en puerto ${PORT}`);
-        console.log(`🌐 URL: http://localhost:${PORT}`);
-        console.log(`\n📊 ENDPOINTS PRINCIPALES:`);
-        console.log(`   🔐 Auth:        http://localhost:${PORT}/api/auth`);
-        console.log(`   👥 Users:       http://localhost:${PORT}/api/users`);
-        console.log(`   🚗 Orders:      http://localhost:${PORT}/api/orders`);
-        console.log(`   👤 Clientes:    http://localhost:${PORT}/api/clientes`);
-        console.log(`   📈 Reportes:    http://localhost:${PORT}/api/reportes`);
-        console.log(`   👥 Lavadores:   http://localhost:${PORT}/api/lavadores`);
-        console.log(`\n🔍 ENDPOINTS DE DIAGNÓSTICO:`);
-        console.log(`   📊 Database:    http://localhost:${PORT}/api/debug/database`);
-        console.log(`   🚗 Lavadores:   http://localhost:${PORT}/api/debug/lavadores`);
-        console.log(`   💰 Comisiones:  http://localhost:${PORT}/api/debug/comisiones`);
-        console.log(`   ❤️  Health:      http://localhost:${PORT}/api/health`);
-        console.log(`\n✅ SISTEMA DE COMISIONES ACTIVO - 40% FIJO`);
-      });
-    })
-    .catch(err => {
-      console.error('❌ No se pudo iniciar el servidor:', err);
-      process.exit(1);
-    });
-}
