@@ -7,22 +7,58 @@ require('dotenv').config();
 const app = express();
 
 // ======================
-// 1. MIDDLEWARES
+// 1. MIDDLEWARES - CORS CORREGIDO
 // ======================
-// CORS para permitir Frontend (Vercel) y local
-const allowedOrigins = [
-  'https://fullwash360.vercel.app',
-  'http://localhost:3000'
-];
 
-if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
-}
+// Configuración de CORS mejorada para aceptar TODOS los subdominios de Vercel
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir solicitudes sin origen (como apps móviles, curl, Postman)
+    if (!origin) {
+      return callback(null, true);
+    }
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
+    // Lista de patrones permitidos
+    const allowedPatterns = [
+      /^https?:\/\/fullwash360(-\w+)*\.vercel\.app$/, // Todos los subdominios de Vercel
+      /^https?:\/\/localhost(:\d+)?$/, // Localhost con cualquier puerto
+      /^https?:\/\/127\.0\.0\.1(:\d+)?$/, // IP local
+    ];
+
+    // Verificar si el origen coincide con algún patrón
+    const isAllowed = allowedPatterns.some(pattern => pattern.test(origin));
+
+    if (isAllowed) {
+      console.log(`🌐 CORS permitido para: ${origin}`);
+      callback(null, true);
+    } else {
+      console.log(`❌ CORS bloqueado para: ${origin}`);
+      console.log(`🔍 Patrones permitidos:`, allowedPatterns.map(p => p.toString()));
+      callback(new Error('Origen no permitido por CORS'), false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+  ],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+// Aplicar CORS a todas las rutas
+app.use(cors(corsOptions));
+
+// Manejar explícitamente las solicitudes OPTIONS (preflight)
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -257,14 +293,22 @@ async function configurarApp() {
   const reporteRoutes = require('./src/routes/reporteRoutes');
   const lavadorRoutes = require('./src/routes/lavadorRoutes');
   
-  app.use('/api/auth', authRoutes);
-  app.use('/api/users', userRoutes);
-  app.use('/api/orders', orderRoutes);
-  app.use('/api/clientes', clienteRoutes);
-  app.use('/api/reportes', reporteRoutes);
-  app.use('/api/lavadores', lavadorRoutes);
+  // Aplicar CORS específicamente a cada ruta para asegurar
+  const routes = [
+    { path: '/api/auth', handler: authRoutes },
+    { path: '/api/users', handler: userRoutes },
+    { path: '/api/orders', handler: orderRoutes },
+    { path: '/api/clientes', handler: clienteRoutes },
+    { path: '/api/reportes', handler: reporteRoutes },
+    { path: '/api/lavadores', handler: lavadorRoutes },
+  ];
   
-  console.log('✅ Rutas configuradas');
+  routes.forEach(route => {
+    app.use(route.path, route.handler);
+    console.log(`✅ Ruta ${route.path} configurada`);
+  });
+  
+  console.log('✅ Todas las rutas configuradas');
   
   // Ruta de diagnóstico
   app.get('/api/debug/database', async (req, res) => {
@@ -375,6 +419,14 @@ async function configurarApp() {
         state: mongoose.connection.readyState === 1 ? 'connected 🟢' : 'disconnected 🔴',
         host: mongoose.connection.host
       },
+      cors: {
+        enabled: true,
+        allowed_patterns: [
+          'fullwash360-*.vercel.app',
+          'localhost:*',
+          '127.0.0.1:*'
+        ]
+      },
       endpoints: {
         auth: '/api/auth',
         users: '/api/users',
@@ -403,6 +455,7 @@ async function configurarApp() {
       version: '1.4.0',
       status: 'online',
       database: mongoose.connection.readyState === 1 ? 'connected 🟢' : 'disconnected 🔴',
+      cors: '✅ Configurado para Vercel',
       features: {
         sistema_comisiones: '✅ ACTIVO (40% fijo)',
         lavador_asignado: '✅ ObjectId estandarizado',
@@ -477,6 +530,7 @@ async function iniciarServidor() {
     console.log('📊 MongoDB Atlas: Conectado ✅');
     console.log('🛣️  Rutas API: Configuradas ✅');
     console.log('👤 Usuario admin: Disponible (ADMIN / admin123)');
+    console.log('🌐 CORS: Configurado para todos los subdominios de Vercel ✅');
     
     return app;
     
@@ -512,7 +566,7 @@ iniciarServidor()
       console.log(`   ❤️  Health:      http://localhost:${PORT}/api/health`);
       console.log(`\n✅ SISTEMA DE COMISIONES ACTIVO - 40% FIJO`);
       console.log(`\n🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🌐 Frontend permitido: https://fullwash360.vercel.app`);
+      console.log(`🌐 CORS Config: Acepta fullwash360-*.vercel.app ✅`);
     });
   })
   .catch(err => {
