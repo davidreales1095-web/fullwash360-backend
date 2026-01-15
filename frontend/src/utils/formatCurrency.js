@@ -1,0 +1,13 @@
+// frontend/src/utils/formatCurrency.js
+export const formatCurrency = (amount) => {
+  if (amount === 0) return '$0';
+  
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+
+export default formatCurrency;

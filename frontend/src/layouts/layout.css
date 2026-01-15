@@ -1,0 +1,184 @@
+/* ============================================
+   MAIN LAYOUT STYLES
+   Estilos específicos para el layout principal
+============================================ */
+
+/* Contenedor de carga */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: var(--gradient-primary);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+  background: var(--white);
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-heavy);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.loading-text h3 {
+  color: var(--dark);
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-xl);
+}
+
+.loading-text p {
+  color: var(--secondary-dark);
+  font-size: var(--font-size-sm);
+}
+
+/* Layout principal */
+.main-layout {
+  min-height: 100vh;
+  background: var(--light-gray);
+}
+
+.site-layout {
+  min-height: 100vh;
+  margin-left: var(--sidebar-width);
+  transition: margin-left var(--transition-normal);
+}
+
+.site-layout.collapsed {
+  margin-left: var(--sidebar-width-collapsed);
+}
+
+@media (max-width: 768px) {
+  .site-layout {
+    margin-left: 0 !important;
+  }
+}
+
+/* Contenido principal */
+.main-content {
+  margin: var(--spacing-lg);
+  min-height: calc(100vh - var(--header-height) - var(--spacing-lg) * 2);
+  transition: all var(--transition-normal);
+}
+
+.content-wrapper {
+  background: var(--white);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-light);
+  min-height: 100%;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Overlay para sidebar móvil */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Drawer de sidebar móvil */
+.mobile-sidebar-drawer .ant-drawer-body {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.mobile-sidebar-drawer .ant-drawer-content {
+  background: var(--gradient-sidebar) !important;
+}
+
+/* Footer de la aplicación */
+.app-footer {
+  text-align: center;
+  background: var(--white) !important;
+  border-top: 1px solid var(--light-border);
+  padding: var(--spacing-md) var(--spacing-lg) !important;
+  color: var(--secondary-dark) !important;
+  font-size: var(--font-size-sm);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    margin: var(--spacing-sm);
+    min-height: calc(100vh - var(--header-height) - var(--spacing-sm) * 2);
+  }
+  
+  .content-wrapper {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+  }
+}
+
+@media (max-width: 576px) {
+  .main-content {
+    margin: var(--spacing-xs);
+    min-height: calc(100vh - var(--header-height) - var(--spacing-xs) * 2);
+  }
+  
+  .content-wrapper {
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+  }
+  
+  .loading-content {
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md);
+  }
+}
+
+/* Transiciones suaves para todos los elementos del layout */
+.ant-layout-sider,
+.ant-layout-header,
+.ant-layout-content,
+.main-content,
+.content-wrapper {
+  transition: all var(--transition-normal) !important;
+}
+
+/* Estilos para cuando el sidebar está colapsado */
+.site-layout.collapsed .main-content {
+  margin-left: var(--spacing-sm);
+  margin-right: var(--spacing-sm);
+}
+
+/* Ajustes para pantallas muy grandes */
+@media (min-width: 1600px) {
+  .main-content {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Efecto hover para cards dentro del contenido */
+.content-wrapper .ant-card {
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.content-wrapper .ant-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Scroll suave para el contenido */
+.content-wrapper {
+  overflow-y: auto;
+  max-height: calc(100vh - var(--header-height) - var(--spacing-lg) * 2 - var(--spacing-lg) * 2);
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    max-height: calc(100vh - var(--header-height) - var(--spacing-sm) * 2 - var(--spacing-md) * 2);
+  }
+}

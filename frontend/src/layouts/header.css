@@ -1,0 +1,255 @@
+/* ============================================
+   HEADER STYLES
+   Estilos específicos para el header
+============================================ */
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--spacing-lg) !important;
+  height: var(--header-height) !important;
+  line-height: var(--header-height) !important;
+  background: var(--white) !important;
+  box-shadow: var(--shadow-light) !important;
+  z-index: 999;
+  position: sticky;
+  top: 0;
+  transition: all var(--transition-normal);
+}
+
+/* Lado izquierdo del header */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.sidebar-toggle {
+  font-size: 16px !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: var(--border-radius) !important;
+  color: var(--primary) !important;
+  border: 1px solid transparent !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.sidebar-toggle:hover {
+  background: var(--light) !important;
+  border-color: var(--primary-light) !important;
+  color: var(--primary-dark) !important;
+  transform: scale(1.05);
+}
+
+/* Breadcrumbs */
+.breadcrumb-container {
+  font-size: 14px !important;
+}
+
+.breadcrumb-container .ant-breadcrumb-link a {
+  color: var(--primary) !important;
+  transition: all var(--transition-fast) !important;
+  text-decoration: none !important;
+}
+
+.breadcrumb-container .ant-breadcrumb-link a:hover {
+  color: var(--primary-dark) !important;
+  text-decoration: underline !important;
+}
+
+.breadcrumb-container .ant-breadcrumb-separator {
+  color: var(--light-border) !important;
+}
+
+/* Lado derecho del header */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+/* Notificaciones */
+.notifications-badge .ant-badge-count {
+  font-size: 10px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  line-height: 16px !important;
+  box-shadow: 0 0 0 1px var(--white);
+}
+
+.notifications-button {
+  font-size: 16px !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: var(--border-radius) !important;
+  color: var(--dark) !important;
+  border: 1px solid transparent !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.notifications-button:hover {
+  background: var(--light) !important;
+  border-color: var(--light-border) !important;
+  color: var(--primary) !important;
+  transform: scale(1.05);
+}
+
+/* Dropdown de notificaciones */
+.notifications-dropdown {
+  min-width: 320px !important;
+  max-width: 400px !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+}
+
+.notifications-dropdown .ant-dropdown-menu {
+  padding: var(--spacing-sm) !important;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.notification-item:hover {
+  background: var(--light);
+}
+
+.notification-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.notification-icon.success {
+  background: var(--success-light);
+  color: var(--success-dark);
+}
+
+.notification-icon.warning {
+  background: var(--warning-light);
+  color: var(--warning-dark);
+}
+
+.notification-icon.info {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 2px;
+  color: var(--dark);
+}
+
+.notification-time {
+  font-size: 12px;
+  color: var(--secondary-dark);
+}
+
+/* Estadísticas rápidas */
+.quick-stats {
+  display: flex;
+  gap: var(--spacing-lg);
+  padding: 0 var(--spacing-lg);
+  border-left: 1px solid var(--light-border);
+  border-right: 1px solid var(--light-border);
+  height: 32px;
+  align-items: center;
+}
+
+.quick-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+}
+
+/* Dropdown de usuario */
+.user-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.user-dropdown-trigger:hover {
+  background: var(--light);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .quick-stats {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0 var(--spacing-md) !important;
+  }
+  
+  .header-left {
+    gap: var(--spacing-md);
+  }
+  
+  .user-info {
+    display: none;
+  }
+  
+  .breadcrumb-container {
+    font-size: 12px !important;
+  }
+  
+  .notifications-dropdown {
+    min-width: 280px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .app-header {
+    padding: 0 var(--spacing-sm) !important;
+  }
+  
+  .header-left {
+    gap: var(--spacing-sm);
+  }
+  
+  .breadcrumb-container {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
