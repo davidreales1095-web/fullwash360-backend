@@ -1,6 +1,7 @@
-// Configuración centralizada de API para FullWash 360
+// Configuración centralizada de API para FullWash 360 - VITE VERSION
 export const getApiBaseUrl = () => {
-  return process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  // Vite usa import.meta.env, no process.env
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000';
 };
 
 const API_BASE = getApiBaseUrl();

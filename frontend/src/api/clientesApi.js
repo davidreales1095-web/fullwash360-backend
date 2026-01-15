@@ -1,64 +1,34 @@
-// src/api/clienteApi.js - VERSIÓN SIMPLIFICADA SIN INTERCEPTORES COMPLEJOS
-import axios from 'axios';
+// src/api/clientesApi.js - VERSIÓN CORREGIDA
+import { apiClient } from '../config/api';
 
-import { API_URLS } from '../config/api';
-const API_URL = API_URLS.CLIENTES;
-
-// Configuración SIMPLE de axios
-const clienteApi = axios.create({
-  baseURL: API_URL,
-  timeout: 10000, // 10 segundos timeout
-});
-
-// ✅ INTERCEPTOR SIMPLE para respuestas
-clienteApi.interceptors.response.use(
-  (response) => response.data, // Extraer solo data
-  (error) => {
-    console.error('❌ Error de API:', error.response?.data || error.message);
-    
-    // Para 404 (cliente no encontrado), retornar objeto amigable
-    if (error.response && error.response.status === 404) {
-      return {
-        success: true,
-        encontrado: false,
-        message: 'Cliente no encontrado',
-        cliente: null,
-        vehiculo: null,
-        contador_actual: 0
-      };
-    }
-    
-    // Para otros errores
-    return Promise.reject(
-      error.response?.data || { 
-        success: false, 
-        msg: 'Error de conexión con el servidor' 
-      }
-    );
-  }
-);
-
-// Funciones de API SIMPLES Y DIRECTAS
 export const clientesApi = {
-  // ✅ BUSCAR CLIENTE POR PLACA (CORREGIDA)
+  // ✅ BUSCAR CLIENTE POR PLACA - CORREGIDO
   buscarPorPlaca: async (placa, punto_id = '000000000000000000000002') => {
     try {
       console.log(`🔍 Buscando cliente: ${placa}, punto: ${punto_id}`);
       
-      // ✅ CORRECCIÓN: Usar la ruta correcta `/buscar/:placa`
-      // ✅ Enviar punto_id como query parameter
-      const response = await clienteApi.get(`/buscar/${placa}`, {
+      // ✅ CORREGIDO: Usar apiClient con ruta correcta
+      const response = await apiClient.get(`/clientes/buscar/${placa}`, {
         params: { punto_id }
       });
       
-      return response;
+      return response.data;
     } catch (error) {
       console.error('❌ Error en buscarPorPlaca:', error);
-      // Si es un objeto amigable (404), retornarlo directamente
-      if (error.encontrado !== undefined) {
-        return error;
+      
+      // ✅ Manejo de 404 (cliente no encontrado)
+      if (error.response && error.response.status === 404) {
+        return {
+          success: true,
+          encontrado: false,
+          message: 'Cliente no encontrado',
+          cliente: null,
+          vehiculo: null,
+          contador_actual: 0
+        };
       }
-      // Si no, retornar objeto de error
+      
+      // ✅ Error genérico
       return {
         success: false,
         encontrado: false,
@@ -70,38 +40,38 @@ export const clientesApi = {
     }
   },
 
-  // ✅ CREAR CLIENTE
+  // ✅ CREAR CLIENTE - CORREGIDO
   crearCliente: async (clienteData) => {
     try {
       console.log('📝 Creando cliente:', clienteData);
-      const response = await clienteApi.post('/', clienteData);
-      return response;
+      const response = await apiClient.post('/clientes', clienteData);
+      return response.data;
     } catch (error) {
       console.error('❌ Error creando cliente:', error);
       throw error;
     }
   },
 
-  // ✅ OBTENER TODOS LOS CLIENTES
+  // ✅ OBTENER TODOS LOS CLIENTES - CORREGIDO
   obtenerClientes: async (punto_id = '000000000000000000000002') => {
     try {
-      const response = await clienteApi.get('/', {
+      const response = await apiClient.get('/clientes', {
         params: { punto_id }
       });
-      return response;
+      return response.data;
     } catch (error) {
       console.error('❌ Error obteniendo clientes:', error);
       throw error;
     }
   },
 
-  // ✅ BUSCAR CLIENTES POR TÉRMINO
+  // ✅ BUSCAR CLIENTES POR TÉRMINO - CORREGIDO
   buscarClientes: async (termino, punto_id = '000000000000000000000002') => {
     try {
-      const response = await clienteApi.get(`/buscar`, {
+      const response = await apiClient.get('/clientes/buscar', {
         params: { q: termino, punto_id }
       });
-      return response;
+      return response.data;
     } catch (error) {
       console.error('❌ Error buscando clientes:', error);
       throw error;
