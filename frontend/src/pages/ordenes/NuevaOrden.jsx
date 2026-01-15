@@ -1,4 +1,4 @@
-// frontend/src/pages/ordenes/NuevaOrden.jsx - VERSIÓN CORREGIDA CON BÚSQUEDA REAL
+// frontend/src/pages/ordenes/NuevaOrden.jsx - VERSIÓN CORREGIDA
 import React, { useState, useEffect } from "react";
 import { 
   Form, Input, Select, Button, message, Card, 
@@ -6,12 +6,22 @@ import {
 } from "antd";
 import { SearchOutlined, LoadingOutlined, UserOutlined, PhoneOutlined } from '@ant-design/icons';
 import ordenesApi from "../../api/ordenesApi";
-import clientesApi from "../../api/clientesApi"; // ✅ NUEVA IMPORTACIÓN
-import { CONFIG } from "../../config";
+import clientesApi from "../../api/clientesApi";
 
 const { Option } = Select;
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
+
+// ✅ CONSTANTES QUE ANTES VENÍAN DE CONFIG
+const PRECIOS_DEFAULT = {
+  carro: { express: 15000, premium: 20000 },
+  moto: { express: 12000, elite: 15000, premium: 17000 },
+  taxi: { express: 15000 },
+  camioneta: { express: 15000, elite: 15000, premium: 15000 }
+};
+
+const PUNTO_ID = "PUNTO001";
+const USUARIO_ID = "USUARIO001";
 
 const NuevaOrden = () => {
   const [form] = Form.useForm();
@@ -21,8 +31,8 @@ const NuevaOrden = () => {
   const [precio, setPrecio] = useState(15000);
   const [infoVehiculo, setInfoVehiculo] = useState(null);
   const [promocionInfo, setPromocionInfo] = useState(null);
-  const [esClienteNuevo, setEsClienteNuevo] = useState(false); // ✅ NUEVO ESTADO
-  const [creandoCliente, setCreandoCliente] = useState(false); // ✅ NUEVO ESTADO
+  const [esClienteNuevo, setEsClienteNuevo] = useState(false);
+  const [creandoCliente, setCreandoCliente] = useState(false);
   
   // ✅ TIPOS DE VEHÍCULO
   const tiposVehiculo = [
@@ -32,10 +42,10 @@ const NuevaOrden = () => {
     { value: 'camioneta', label: '🚙 Camioneta' }
   ];
 
-  // ✅ TARIFAS (usa las de config o las locales)
-  const tarifas = CONFIG.PRECIOS_DEFAULT;
+  // ✅ TARIFAS
+  const tarifas = PRECIOS_DEFAULT;
 
-  // ✅ FUNCIÓN PARA BUSCAR CLIENTE POR PLACA (VERSIÓN REAL)
+  // ✅ FUNCIÓN PARA BUSCAR CLIENTE POR PLACA
   const buscarVehiculoPorPlaca = async (placa) => {
     if (!placa || placa.length < 3) {
       setInfoVehiculo(null);
@@ -46,9 +56,8 @@ const NuevaOrden = () => {
 
     setBuscandoVehiculo(true);
     try {
-      // ✅ LLAMADA REAL AL BACKEND
       console.log(`🔍 Buscando cliente por placa: ${placa}`);
-      const response = await clientesApi.buscarPorPlaca(placa, CONFIG.PUNTO_ID);
+      const response = await clientesApi.buscarPorPlaca(placa, PUNTO_ID);
       
       console.log("✅ Respuesta de búsqueda:", response);
       
@@ -84,12 +93,11 @@ const NuevaOrden = () => {
         }
         
       } else {
-        // ❌ CLIENTE NO ENCONTRADO - Mostrar campos para crear
+        // ❌ CLIENTE NO ENCONTRADO
         setEsClienteNuevo(true);
         setInfoVehiculo(null);
         setPromocionInfo(null);
         
-        // ✅ RESETEAR CAMPOS DEL CLIENTE
         form.setFieldsValue({
           nombre_cliente: '',
           telefono_cliente: '',
@@ -179,7 +187,7 @@ const NuevaOrden = () => {
     } else {
       setPrecio(15000);
     }
-  }, [form, tipoLavado, promocionInfo]);
+  }, [form, tipoLavado, promocionInfo, tarifas]);
 
   // ✅ MANEJAR CAMBIO DE TIPO DE VEHÍCULO
   const handleTipoVehiculoChange = (value) => {
@@ -225,8 +233,8 @@ const NuevaOrden = () => {
         tipo_vehiculo: tipoVehiculo,
         tipo_lavado_preferido: tipoLavado,
         lavadas_iniciales: datosCliente.lavadas_iniciales || 0,
-        punto_id: CONFIG.PUNTO_ID,
-        usuario_id: CONFIG.USUARIO_ID
+        punto_id: PUNTO_ID,
+        usuario_id: USUARIO_ID
       };
 
       console.log("📝 Creando cliente nuevo:", clienteData);
@@ -251,7 +259,7 @@ const NuevaOrden = () => {
     }
   };
 
-  // ✅ CREAR ORDEN (VERSIÓN MEJORADA)
+  // ✅ CREAR ORDEN
   const handleCrearOrden = async (values) => {
     if (!values.placa || !values.tipo) {
       message.error("Placa y tipo de vehículo son obligatorios");
@@ -301,10 +309,10 @@ const NuevaOrden = () => {
         tipo_lavado: tipoLavado,
         precio_manual: precio,
         notas_cliente: values.comentarios || "",
-        usuario_id: CONFIG.USUARIO_ID,
-        punto_id: CONFIG.PUNTO_ID,
-        cliente_id: cliente_id,  // ✅ Si es nuevo, ya tiene ID
-        vehiculo_id: vehiculo_id, // ✅ Si es nuevo, ya tiene ID
+        usuario_id: USUARIO_ID,
+        punto_id: PUNTO_ID,
+        cliente_id: cliente_id,
+        vehiculo_id: vehiculo_id,
         es_decima_gratis: promocionInfo?.esProximaGratis || false
       };
 
