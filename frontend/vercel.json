@@ -10,21 +10,33 @@
     }
   ],
   "routes": [
-    // 1. Primero, archivos estáticos con extensión (.js, .css, .png, etc.)
     {
-      "src": "/(.*\\.\\w+$)",  // Regex: captura archivos con extensión
-      "dest": "/$0",           // Sirve el archivo real
-      "headers": {
-        "cache-control": "public, max-age=31536000, immutable"
-      }
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*\\.js)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
-    // 2. Después, todo lo demás a index.html (para React Router)
     {
-      "src": "/.*",            // Cualquier otra cosa
-      "dest": "/index.html",
-      "headers": {
-        "cache-control": "no-cache, no-store, must-revalidate"
-      }
+      "source": "/assets/(.*\\.css)",
+      "headers": [
+        {
+          "key": "Content-Type", 
+          "value": "text/css"
+        }
+      ]
     }
   ]
 }
