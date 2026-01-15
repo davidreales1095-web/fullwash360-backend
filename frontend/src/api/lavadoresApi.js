@@ -1,7 +1,8 @@
 // src/api/lavadoresApi.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+import { API_URLS } from '../config/api';
+const API_URL = API_URLS.API; // o API_URLS.LAVADORES dependiendo de las rutas
 
 const lavadoresApi = {
   // =====================================

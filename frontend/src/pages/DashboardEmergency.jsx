@@ -21,7 +21,8 @@ const DashboardEmergency = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/orders/stats', {
+      import { API_URLS } from '../config/api';
+const response = await fetch(`${API_URLS.ORDERS}/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();

@@ -1,7 +1,8 @@
 // src/api/clienteApi.js - VERSIÓN SIMPLIFICADA SIN INTERCEPTORES COMPLEJOS
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/clientes';
+import { API_URLS } from '../config/api';
+const API_URL = API_URLS.CLIENTES;
 
 // Configuración SIMPLE de axios
 const clienteApi = axios.create({

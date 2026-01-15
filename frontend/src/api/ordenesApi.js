@@ -2,7 +2,8 @@ import axios from 'axios';
 import lavadoresApi from './lavadoresApi';
 import dayjs from 'dayjs';
 
-const API_URL = 'http://localhost:5000/api';
+import { API_URLS } from '../config/api';
+const API_URL = API_URLS.ORDERS;
 
 const ordenesApi = {
   // ✅ CREAR NUEVA ORDEN - CORREGIDO

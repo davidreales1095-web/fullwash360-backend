@@ -37,7 +37,8 @@ const AppSidebar = ({ collapsed, isMobile, onClose, onCollapse, user }) => {
       const token = localStorage.getItem('token');
       if (!token) return;
       
-      const response = await fetch('http://localhost:5000/api/orders/activas', {
+      import { API_URLS } from '../config/api';
+const response = await fetch(`${API_URLS.ORDERS}/activas`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
