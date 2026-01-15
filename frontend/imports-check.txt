@@ -1,0 +1,7 @@
+src\api\axiosConfig.js:import { apiClient } from '../config/api';
+src\api\clientesApi.js:import { API_URLS } from '../config/api';
+src\api\lavadoresApi.js:import { API_URLS } from '../config/api';
+src\api\ordenesApi.js:import { API_URLS } from '../config/api';
+src\api\reportesApi.js:import { API_URLS } from '../config/api';
+src\layouts\AppSidebar.jsx:import { API_URLS } from '../config/api'; // ✅ MOVIDO AL PRINCIPIO CON LOS DEMÁS IMPORTS
+src\pages\DashboardEmergency.jsx:import { API_URLS } from '../config/api'; // ✅ MOVIDO AL PRINCIPIO

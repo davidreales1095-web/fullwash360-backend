@@ -14,9 +14,10 @@ import {
   HistoryOutlined,
   BellOutlined,
   PlusCircleOutlined,
-  DollarOutlined  // ✅ Añadido para Comisiones Diarias
+  DollarOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { API_URLS } from '../config/api'; // ✅ MOVIDO AL PRINCIPIO CON LOS DEMÁS IMPORTS
 import './sidebar.css';
 
 const { Sider } = Layout;
@@ -36,9 +37,9 @@ const AppSidebar = ({ collapsed, isMobile, onClose, onCollapse, user }) => {
       setLoadingCount(true);
       const token = localStorage.getItem('token');
       if (!token) return;
-      
-      import { API_URLS } from '../config/api';
-const response = await fetch(`${API_URLS.ORDERS}/activas`, {
+
+      // ✅ API_URLS YA ESTÁ DISPONIBLE - NO NECESITA IMPORT DENTRO DE FUNCIÓN
+      const response = await fetch(`${API_URLS.ORDERS}/activas`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -163,7 +164,6 @@ const response = await fetch(`${API_URLS.ORDERS}/activas`, {
           if (isMobile && onClose) onClose();
         },
       },
-      // ✅ NUEVO: Comisiones Diarias
       {
         key: '/comisiones-diarias',
         icon: <DollarOutlined />,
