@@ -942,7 +942,7 @@ const OrdenesActivas = () => {
               <div>
                 <p>El sistema no puede conectarse al servidor backend. Verifica:</p>
                 <ul>
-                  <li>✅ Que el servidor esté corriendo en <code>{process.env.REACT_APP_API_URL || 'http://localhost:5000'}</code></li>
+                  <li>✅ Que el servidor esté corriendo en <code>http://localhost:5000</code></li>
                   <li>✅ Que la API <code>/api/orders/activas</code> esté accesible</li>
                   <li>✅ Que no haya errores en la consola del backend</li>
                 </ul>

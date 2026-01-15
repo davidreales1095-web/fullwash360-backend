@@ -9,7 +9,6 @@ import {
   CheckCircleOutlined, ReloadOutlined 
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { API_URLS } from '../config/api'; // ✅ MOVIDO AL PRINCIPIO
 
 const { Title, Text } = Typography;
 
@@ -22,8 +21,7 @@ const DashboardEmergency = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      // ✅ API_URLS ya está disponible - NO NECESITA IMPORT DENTRO DE FUNCIÓN
-      const response = await fetch(`${API_URLS.ORDERS}/stats`, {
+      const response = await fetch('http://localhost:5000/api/orders/stats', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();

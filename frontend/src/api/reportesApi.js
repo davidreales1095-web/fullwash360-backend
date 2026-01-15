@@ -2,8 +2,7 @@
 import axios from "axios";
 
 // URL fija para desarrollo - NO usar process.env sin configuración previa
-import { API_URLS } from '../config/api';
-const BASE_URL = API_URLS.BASE;
+const BASE_URL = "http://localhost:5000";
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api/orders`, // apunta a /api/orders
