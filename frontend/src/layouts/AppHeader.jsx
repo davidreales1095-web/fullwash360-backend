@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Layout, Breadcrumb, Avatar, Dropdown, Badge, Button, Space, Typography, Spin } from 'antd';
+import React from 'react';
+import { Layout, Breadcrumb, Avatar, Dropdown, Badge, Button, Space, Typography } from 'antd';
 import { 
   MenuFoldOutlined, 
   MenuUnfoldOutlined, 
@@ -8,11 +8,9 @@ import {
   LogoutOutlined,
   SettingOutlined,
   QuestionCircleOutlined,
-  HomeOutlined,
-  SyncOutlined
+  HomeOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
 import './header.css';
 
 const { Header } = Layout;
@@ -22,97 +20,14 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const notifications = 3;
-  
-  // Estados para las estadísticas
-  const [estadisticas, setEstadisticas] = useState({ 
-    ordenesHoy: 0, 
-    ingresosHoy: 0 
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
 
-  // ✅ NUEVO: Función simplificada para el NUEVO endpoint /stats/header
-  const fetchEstadisticas = async () => {
-    try {
-      setLoading(true);
-      console.log('🔄 Conectando al NUEVO endpoint /stats/header...');
-      
-      const response = await axios.get(
-        'https://fullwash360-backend.vercel.app/api/stats/header', // ✅ URL CORREGIDA
-        {
-          timeout: 5000,
-          headers: {
-            'Accept': 'application/json'
-          }
-        }
-      );
-      
-      console.log('✅ Endpoint /stats/header respondió:', response.data);
-      
-      // El nuevo endpoint devuelve datos DIRECTOS y simples
-      const data = response.data;
-      
-      if (data.success === true) {
-        setEstadisticas({
-          ordenesHoy: data.ordenesHoy || 0,
-          ingresosHoy: data.ingresosHoy || 0
-        });
-        setError(null);
-      } else {
-        // Si hay algún problema en el backend pero responde
-        setEstadisticas({
-          ordenesHoy: 8,
-          ingresosHoy: 240000
-        });
-        setError('Datos no disponibles');
-      }
-      
-      setLastUpdate(new Date());
-      console.log('📊 Datos actualizados:', estadisticas);
-      
-    } catch (err) {
-      console.error('❌ Error cargando estadísticas:', err.message);
-      
-      // Datos de ejemplo en caso de error
-      const datosEjemplo = {
-        ordenesHoy: 8,
-        ingresosHoy: 240000
-      };
-      
-      setEstadisticas(datosEjemplo);
-      setError('Conexión fallida - Mostrando datos de ejemplo');
-      setLastUpdate(new Date());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Cargar estadísticas al montar el componente
-  useEffect(() => {
-    fetchEstadisticas();
-    
-    // Actualizar cada 30 segundos
-    const interval = setInterval(fetchEstadisticas, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Función para formatear moneda
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
-  // Función para formatear hora de actualización
-  const formatUpdateTime = (date) => {
-    return date.toLocaleTimeString('es-CO', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+  // Función para formatear fecha actual (opcional, si la quieres mantener)
+  const getCurrentDate = () => {
+    return new Date().toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
@@ -272,16 +187,6 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
 
       <div className="header-right">
         <Space size="middle">
-          {/* Botón de actualización manual */}
-          <Button
-            type="text"
-            icon={<SyncOutlined spin={loading} />}
-            onClick={fetchEstadisticas}
-            size="small"
-            title="Actualizar estadísticas"
-            style={{ marginRight: '8px' }}
-          />
-
           {/* Botón de notificaciones */}
           <Dropdown
             menu={{ items: notificationItems }}
@@ -297,48 +202,6 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
               />
             </Badge>
           </Dropdown>
-
-          {/* Información rápida del día - CONECTADO AL NUEVO ENDPOINT */}
-          {!isMobile && (
-            <div className="quick-stats">
-              <div className="quick-stat">
-                <Text type="secondary" style={{ fontSize: '11px', display: 'block' }}>
-                  Hoy
-                  <span style={{ fontSize: '9px', marginLeft: '4px', color: '#999' }}>
-                    {formatUpdateTime(lastUpdate)}
-                  </span>
-                </Text>
-                {loading ? (
-                  <Spin size="small" style={{ margin: '2px 0' }} />
-                ) : error ? (
-                  <Text strong style={{ color: 'var(--error)', fontSize: '13px' }}>
-                    {error}
-                  </Text>
-                ) : (
-                  <Text strong style={{ color: 'var(--success)', fontSize: '14px' }}>
-                    {estadisticas.ordenesHoy} órdenes
-                  </Text>
-                )}
-              </div>
-              
-              <div className="divider" style={{ borderLeft: '1px solid #f0f0f0', height: '30px' }} />
-              
-              <div className="quick-stat">
-                <Text type="secondary" style={{ fontSize: '11px' }}>Ingresos</Text>
-                {loading ? (
-                  <Spin size="small" style={{ margin: '2px 0' }} />
-                ) : error ? (
-                  <Text strong style={{ color: 'var(--error)', fontSize: '13px' }}>
-                    {error}
-                  </Text>
-                ) : (
-                  <Text strong style={{ color: 'var(--primary)', fontSize: '14px' }}>
-                    {formatCurrency(estadisticas.ingresosHoy)}
-                  </Text>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Dropdown de usuario */}
           <Dropdown
