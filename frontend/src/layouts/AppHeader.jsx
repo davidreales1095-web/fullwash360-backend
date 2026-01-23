@@ -1,5 +1,5 @@
-import React from 'react';
-import { Layout, Breadcrumb, Avatar, Dropdown, Badge, Button, Space, Typography } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Layout, Breadcrumb, Avatar, Dropdown, Badge, Button, Space, Typography, Spin } from 'antd';
 import { 
   MenuFoldOutlined, 
   MenuUnfoldOutlined, 
@@ -8,19 +8,89 @@ import {
   LogoutOutlined,
   SettingOutlined,
   QuestionCircleOutlined,
-  HomeOutlined
+  HomeOutlined,
+  SyncOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import './header.css';
 
 const { Header } = Layout;
 const { Text } = Typography;
 
-// NOTA: Ahora recibimos user como prop desde MainLayout
 const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const notifications = 3; // Cambié de useState a constante
+  const notifications = 3;
+  
+  // Estados para las estadísticas
+  const [estadisticas, setEstadisticas] = useState({ 
+    ordenesHoy: 0, 
+    ingresosHoy: 0 
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+
+  // Función para cargar estadísticas
+  const fetchEstadisticas = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      
+      const response = await axios.get(
+        'https://fullwash360-backend.vercel.app/api/ordenes/estadisticas',
+        token ? {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        } : {}
+      );
+      
+      // Ajusta estos campos según lo que devuelva tu API
+      // Posibles nombres: ordenesHoy, ingresosHoy, totalOrdenesHoy, totalIngresosHoy, etc.
+      setEstadisticas({
+        ordenesHoy: response.data.ordenesHoy || response.data.totalOrdenesHoy || 0,
+        ingresosHoy: response.data.ingresosHoy || response.data.totalIngresosHoy || 0
+      });
+      setLastUpdate(new Date());
+      setError(null);
+    } catch (err) {
+      console.error('Error cargando estadísticas:', err);
+      setError('Error al cargar datos');
+      // Mantener los últimos datos si existen
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar estadísticas al montar el componente
+  useEffect(() => {
+    fetchEstadisticas();
+    
+    // Actualizar cada 2 minutos (120000 ms)
+    const interval = setInterval(fetchEstadisticas, 120000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Función para formatear moneda
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  // Función para formatear hora de actualización
+  const formatUpdateTime = (date) => {
+    return date.toLocaleTimeString('es-CO', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
 
   // Generar breadcrumbs desde la ruta actual
   const getBreadcrumbs = () => {
@@ -38,7 +108,6 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
       },
     ];
 
-    // Mapear rutas a nombres amigables
     const routeNames = {
       'dashboard': 'Dashboard',
       'ordenes': 'Órdenes',
@@ -107,10 +176,8 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
       label: 'Cerrar Sesión',
       danger: true,
       onClick: () => {
-        // Limpiar localStorage
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        // Redirigir al login
         navigate('/login');
       },
     },
@@ -165,7 +232,6 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
   return (
     <Header className="app-header">
       <div className="header-left">
-        {/* Botón para toggle sidebar */}
         <Button
           type="text"
           icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -173,7 +239,6 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
           className="sidebar-toggle"
         />
 
-        {/* Breadcrumbs */}
         <Breadcrumb 
           items={breadcrumbItems}
           className="breadcrumb-container"
@@ -183,6 +248,16 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
 
       <div className="header-right">
         <Space size="middle">
+          {/* Botón de actualización manual */}
+          <Button
+            type="text"
+            icon={<SyncOutlined spin={loading} />}
+            onClick={fetchEstadisticas}
+            size="small"
+            title="Actualizar estadísticas"
+            style={{ marginRight: '8px' }}
+          />
+
           {/* Botón de notificaciones */}
           <Dropdown
             menu={{ items: notificationItems }}
@@ -199,16 +274,44 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
             </Badge>
           </Dropdown>
 
-          {/* Información rápida del día */}
+          {/* Información rápida del día - AHORA CON DATOS REALES */}
           {!isMobile && (
             <div className="quick-stats">
               <div className="quick-stat">
-                <Text type="secondary" style={{ fontSize: '12px' }}>Hoy</Text>
-                <Text strong style={{ color: 'var(--success)' }}>8 órdenes</Text>
+                <Text type="secondary" style={{ fontSize: '11px', display: 'block' }}>
+                  Hoy
+                  <span style={{ fontSize: '9px', marginLeft: '4px', color: '#999' }}>
+                    {formatUpdateTime(lastUpdate)}
+                  </span>
+                </Text>
+                {loading ? (
+                  <Spin size="small" style={{ margin: '2px 0' }} />
+                ) : error ? (
+                  <Text strong style={{ color: 'var(--error)', fontSize: '13px' }}>
+                    Error
+                  </Text>
+                ) : (
+                  <Text strong style={{ color: 'var(--success)', fontSize: '14px' }}>
+                    {estadisticas.ordenesHoy} órdenes
+                  </Text>
+                )}
               </div>
+              
+              <div className="divider" style={{ borderLeft: '1px solid #f0f0f0', height: '30px' }} />
+              
               <div className="quick-stat">
-                <Text type="secondary" style={{ fontSize: '12px' }}>Ingresos</Text>
-                <Text strong style={{ color: 'var(--primary)' }}>$240.00</Text>
+                <Text type="secondary" style={{ fontSize: '11px' }}>Ingresos</Text>
+                {loading ? (
+                  <Spin size="small" style={{ margin: '2px 0' }} />
+                ) : error ? (
+                  <Text strong style={{ color: 'var(--error)', fontSize: '13px' }}>
+                    Error
+                  </Text>
+                ) : (
+                  <Text strong style={{ color: 'var(--primary)', fontSize: '14px' }}>
+                    {formatCurrency(estadisticas.ingresosHoy)}
+                  </Text>
+                )}
               </div>
             </div>
           )}
