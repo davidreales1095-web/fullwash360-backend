@@ -18,6 +18,14 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
+// ✅ NUEVO: Middleware específico para el endpoint de estadísticas
+app.use('/api/ordenes/estadisticas', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://fullwash3601.vercel.app');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
+
 // Manejar explícitamente las solicitudes OPTIONS (preflight)
 app.options('*', cors());
 
@@ -218,7 +226,7 @@ async function inicializarSistemaCompleta() {
       const lavadoresPrueba = [
         { codigo: 'LAV_001', nombre: 'Lavador Uno', password: 'lavador123', rol: 'lavador', punto_id: puntoPrincipal._id },
         { codigo: 'LAV_002', nombre: 'Lavador Dos', password: 'lavador123', rol: 'lavador', punto_id: puntoPrincipal._id },
-        { codigo: 'LAV_003', nombre: 'Lavador Tres', password: 'lavador123', rol: 'lavador', punto_id: puntoPrincipal._id },
+        { codigo: 'LAV_003', nombre: 'Lavador Tres', password: 'lavador123', rol: 'lavador', punto_id: pontoPrincipal._id },
       ];
       
       for (const lavador of lavadoresPrueba) {
@@ -482,6 +490,7 @@ async function iniciarServidor() {
     console.log('🛣️  Rutas API: Configuradas ✅');
     console.log('👤 Usuario admin: Disponible (ADMIN / admin123)');
     console.log('🌐 CORS: Configurado para Vercel y localhost ✅');
+    console.log('📊 Estadísticas endpoint: Habilitado con CORS específico ✅');
     
     return app;
     
@@ -520,6 +529,7 @@ iniciarServidor()
       console.log(`\n✅ SISTEMA DE COMISIONES ACTIVO - 40% FIJO`);
       console.log(`\n🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
       console.log(`✅ CORS FIX: Permitido https://fullwash3601.vercel.app ✅`);
+      console.log(`📈 Estadísticas: /api/ordenes/estadisticas ✅`);
     });
   })
   .catch(err => {
