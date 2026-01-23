@@ -32,59 +32,47 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
-  // ✅ NUEVA FUNCIÓN SIMPLIFICADA PARA CARGAR ESTADÍSTICAS
+  // ✅ NUEVO: Función simplificada para el NUEVO endpoint /stats/header
   const fetchEstadisticas = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Conectando a API de estadísticas...');
+      console.log('🔄 Conectando al NUEVO endpoint /stats/header...');
       
       const response = await axios.get(
-        'https://fullwash360-backend.vercel.app/api/ordenes/estadisticas',
+        'https://fullwash360-backend.vercel.app/api/stats/header', // ✅ URL CORREGIDA
         {
-          timeout: 5000, // 5 segundos máximo
+          timeout: 5000,
           headers: {
             'Accept': 'application/json'
           }
         }
       );
       
-      console.log('✅ API respondió correctamente');
+      console.log('✅ Endpoint /stats/header respondió:', response.data);
       
-      // Formatear la respuesta según la estructura de TU backend
+      // El nuevo endpoint devuelve datos DIRECTOS y simples
       const data = response.data;
       
-      // Opción 1: Si los datos vienen en data.data.stats (estructura actual)
-      if (data.data && data.data.stats) {
-        const stats = data.data.stats;
+      if (data.success === true) {
         setEstadisticas({
-          ordenesHoy: stats.generales?.ordenes_hoy || 0,
-          ingresosHoy: stats.hoy?.ingresos_totales || 0
+          ordenesHoy: data.ordenesHoy || 0,
+          ingresosHoy: data.ingresosHoy || 0
         });
-      }
-      // Opción 2: Si vienen directamente en la raíz
-      else if (data.ordenes_hoy !== undefined || data.ingresos_totales !== undefined) {
-        setEstadisticas({
-          ordenesHoy: data.ordenes_hoy || data.ordenesHoy || 0,
-          ingresosHoy: data.ingresos_totales || data.ingresosHoy || 0
-        });
-      }
-      // Opción 3: Si es un array o estructura diferente
-      else {
-        console.log('⚠️  Estructura de datos diferente:', data);
-        // Datos de ejemplo como fallback
+        setError(null);
+      } else {
+        // Si hay algún problema en el backend pero responde
         setEstadisticas({
           ordenesHoy: 8,
           ingresosHoy: 240000
         });
+        setError('Datos no disponibles');
       }
       
       setLastUpdate(new Date());
-      setError(null);
-      console.log('📊 Datos cargados exitosamente:', estadisticas);
+      console.log('📊 Datos actualizados:', estadisticas);
       
     } catch (err) {
       console.error('❌ Error cargando estadísticas:', err.message);
-      console.error('Detalles del error:', err.response?.data || err.message);
       
       // Datos de ejemplo en caso de error
       const datosEjemplo = {
@@ -93,7 +81,7 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
       };
       
       setEstadisticas(datosEjemplo);
-      setError('Backend temporalmente no disponible - Mostrando datos de ejemplo');
+      setError('Conexión fallida - Mostrando datos de ejemplo');
       setLastUpdate(new Date());
     } finally {
       setLoading(false);
@@ -310,7 +298,7 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
             </Badge>
           </Dropdown>
 
-          {/* Información rápida del día - AHORA CON DATOS REALES */}
+          {/* Información rápida del día - CONECTADO AL NUEVO ENDPOINT */}
           {!isMobile && (
             <div className="quick-stats">
               <div className="quick-stat">
@@ -324,7 +312,7 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
                   <Spin size="small" style={{ margin: '2px 0' }} />
                 ) : error ? (
                   <Text strong style={{ color: 'var(--error)', fontSize: '13px' }}>
-                    Error
+                    {error}
                   </Text>
                 ) : (
                   <Text strong style={{ color: 'var(--success)', fontSize: '14px' }}>
@@ -341,7 +329,7 @@ const AppHeader = ({ collapsed, toggleSidebar, isMobile, user }) => {
                   <Spin size="small" style={{ margin: '2px 0' }} />
                 ) : error ? (
                   <Text strong style={{ color: 'var(--error)', fontSize: '13px' }}>
-                    Error
+                    {error}
                   </Text>
                 ) : (
                   <Text strong style={{ color: 'var(--primary)', fontSize: '14px' }}>
