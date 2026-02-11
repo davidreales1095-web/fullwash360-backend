@@ -442,46 +442,136 @@ const getOrdenesActivas = async (req, res) => {
   }
 };
 
-// ✅ OBTENER HISTORIAL DE ÓRDENES
+// ===================================================================
+// ✅ NUEVA VERSIÓN: OBTENER HISTORIAL DE ÓRDENES (CON TODOS LOS FILTROS)
+// ===================================================================
 const getHistorialOrdenes = async (req, res) => {
   try {
-    const { fechaInicio, fechaFin, lavador_id, page = 1, limit = 50 } = req.query;
+    // 1️⃣ Extraer todos los parámetros (soporta camelCase y snake_case)
+    const {
+      fechaInicio, fechaFin,           // camelCase (compatibilidad)
+      fecha_inicio, fecha_fin,        // snake_case (recomendado)
+      lavador_id,                    // snake_case
+      lavadorId,                    // camelCase (opcional)
+      tipo_vehiculo,                // puede ser string o array
+      tipo_lavado,                 // puede ser string o array
+      metodo_pago,                // puede ser string o array
+      min_monto, max_monto,       // números
+      ordenar_por = 'fecha',      // fecha, monto, placa
+      orden = 'desc',            // asc, desc
+      page = 1,
+      limit = 50
+    } = req.query;
+
+    // 2️⃣ Construir filtro base
     const filtro = { estado: 'completada' };
-    
-    if (fechaInicio || fechaFin) {
+
+    // ----- FILTRO DE FECHAS (sobre fecha_cobro) -----
+    const inicio = fecha_inicio || fechaInicio;
+    const fin = fecha_fin || fechaFin;
+
+    if (inicio || fin) {
       filtro.fecha_cobro = {};
-      if (fechaInicio) filtro.fecha_cobro.$gte = new Date(fechaInicio);
-      if (fechaFin) {
-        const finDate = new Date(fechaFin);
-        finDate.setHours(23, 59, 59, 999);
-        filtro.fecha_cobro.$lte = finDate;
+      if (inicio) {
+        const fechaInicioDate = new Date(inicio);
+        fechaInicioDate.setHours(0, 0, 0, 0);
+        filtro.fecha_cobro.$gte = fechaInicioDate;
+      }
+      if (fin) {
+        const fechaFinDate = new Date(fin);
+        fechaFinDate.setHours(23, 59, 59, 999);
+        filtro.fecha_cobro.$lte = fechaFinDate;
       }
     }
-    if (lavador_id) filtro.lavador_asignado = lavador_id;
-    
+
+    // ----- FILTRO POR LAVADOR -----
+    const lavador = lavador_id || lavadorId;
+    if (lavador) {
+      filtro.lavador_asignado = lavador;
+    }
+
+    // ----- FILTRO POR TIPO DE VEHÍCULO -----
+    if (tipo_vehiculo) {
+      if (Array.isArray(tipo_vehiculo)) {
+        filtro.tipo_vehiculo = { $in: tipo_vehiculo };
+      } else {
+        filtro.tipo_vehiculo = tipo_vehiculo;
+      }
+    }
+
+    // ----- FILTRO POR TIPO DE LAVADO (está dentro de servicios) -----
+    if (tipo_lavado) {
+      if (Array.isArray(tipo_lavado)) {
+        filtro['servicios.tipo_lavado'] = { $in: tipo_lavado };
+      } else {
+        filtro['servicios.tipo_lavado'] = tipo_lavado;
+      }
+    }
+
+    // ----- FILTRO POR MÉTODO DE PAGO -----
+    if (metodo_pago) {
+      if (Array.isArray(metodo_pago)) {
+        filtro.metodo_pago = { $in: metodo_pago };
+      } else {
+        filtro.metodo_pago = metodo_pago;
+      }
+    }
+
+    // ----- FILTRO POR RANGO DE MONTO (total) -----
+    if (min_monto !== undefined || max_monto !== undefined) {
+      filtro.total = {};
+      if (min_monto !== undefined) filtro.total.$gte = Number(min_monto);
+      if (max_monto !== undefined) filtro.total.$lte = Number(max_monto);
+    }
+
+    // 3️⃣ Configurar ordenamiento
+    let sort = {};
+    if (ordenar_por === 'fecha') {
+      sort.fecha_cobro = orden === 'asc' ? 1 : -1;
+    } else if (ordenar_por === 'monto') {
+      sort.total = orden === 'asc' ? 1 : -1;
+    } else if (ordenar_por === 'placa') {
+      sort.placa = orden === 'asc' ? 1 : -1;
+    } else {
+      sort.fecha_cobro = -1; // por defecto, más reciente primero
+    }
+
+    // 4️⃣ Paginación
     const skip = (page - 1) * limit;
+    const limitNum = parseInt(limit);
+
+    // 5️⃣ Ejecutar consultas
     const ordenes = await Order.find(filtro)
-      .sort({ fecha_cobro: -1 })
+      .sort(sort)
       .skip(skip)
-      .limit(parseInt(limit))
+      .limit(limitNum)
       .lean();
+
     const total = await Order.countDocuments(filtro);
-    const totalVentas = ordenes.reduce((sum, orden) => sum + orden.total, 0);
+
+    // 6️⃣ Totales (opcional, para estadísticas)
+    const totalVentas = ordenes.reduce((sum, orden) => sum + (orden.total || 0), 0);
     const totalComisiones = ordenes.reduce((sum, orden) => sum + (orden.comision_lavador?.monto || 0), 0);
-    
-    res.json({ 
-      success: true, 
+
+    // 7️⃣ Respuesta
+    res.json({
+      success: true,
       ordenes,
       total,
       totalVentas,
       totalComisiones,
       page: parseInt(page),
-      limit: parseInt(limit),
-      totalPages: Math.ceil(total / limit)
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum)
     });
+
   } catch (error) {
-    console.error('Error en getHistorialOrdenes:', error);
-    res.status(500).json({ success: false, message: 'Error al obtener historial de órdenes' });
+    console.error('❌ Error en getHistorialOrdenes:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener historial de órdenes',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -537,7 +627,7 @@ const getEstadisticasComisiones = async (req, res) => {
   }
 };
 
-// ✅ OBTENER TODAS LAS ÓRDENES (DEBUG)
+// ✅ OBTENER TODAS LAS ÓRDENES (DEBUG) - OPCIONAL
 const getTodasOrdenes = async (req, res) => {
   try {
     const ordenes = await Order.find({}).sort({ fecha_creacion: -1 }).limit(50).lean();

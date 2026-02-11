@@ -78,7 +78,7 @@ const getFechaColombia = (date = null) => {
 const HistorialOrdenes = () => {
   const [ordenes, setOrdenes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [filterType, setFilterType] = useState('hoy'); // ✅ Cambiado a Select
+  const [filterType, setFilterType] = useState('hoy');
   const [fechaEspecifica, setFechaEspecifica] = useState(getFechaColombia());
   const [estadisticas, setEstadisticas] = useState(null);
   const [search, setSearch] = useState('');
@@ -105,12 +105,10 @@ const HistorialOrdenes = () => {
     cargarLavadores();
   }, []);
 
-  // Cargar historial cuando cambian los filtros básicos
+  // ✅ Cargar historial al montar el componente
   useEffect(() => {
-    if (filterType !== 'personalizado') {
-      cargarHistorial();
-    }
-  }, [filterType, fechaEspecifica]);
+    cargarHistorial();
+  }, []); // Solo al montar
 
   const cargarLavadores = async () => {
     try {
@@ -121,63 +119,61 @@ const HistorialOrdenes = () => {
     }
   };
 
+  // ✅ NUEVA VERSIÓN: Cargar historial usando la API unificada
   const cargarHistorial = async () => {
     setLoading(true);
     try {
-      let fechaParam = '';
-      
+      let filtros = {};
+
       switch (filterType) {
         case 'hoy':
-          // ✅ USAR HORA COLOMBIA
-          fechaParam = getFechaColombia().format('YYYY-MM-DD');
+          filtros = {
+            fechaInicio: getFechaColombia().format('YYYY-MM-DD'),
+            fechaFin: getFechaColombia().format('YYYY-MM-DD')
+          };
           break;
         case 'ayer':
-          fechaParam = getFechaColombia().subtract(1, 'day').format('YYYY-MM-DD');
+          filtros = {
+            fechaInicio: getFechaColombia().subtract(1, 'day').format('YYYY-MM-DD'),
+            fechaFin: getFechaColombia().subtract(1, 'day').format('YYYY-MM-DD')
+          };
           break;
         case 'mes':
-          fechaParam = 'mes';
-          break;
-        case 'todos':
-          fechaParam = 'todos';
+          filtros = {
+            fechaInicio: getFechaColombia().startOf('month').format('YYYY-MM-DD'),
+            fechaFin: getFechaColombia().endOf('month').format('YYYY-MM-DD')
+          };
           break;
         case 'especifica':
-          fechaParam = fechaEspecifica.format('YYYY-MM-DD');
+          filtros = {
+            fechaInicio: fechaEspecifica.format('YYYY-MM-DD'),
+            fechaFin: fechaEspecifica.format('YYYY-MM-DD')
+          };
           break;
         case 'personalizado':
-          fechaParam = 'personalizado';
+          filtros = {
+            fechaInicio: rangoFechas[0].format('YYYY-MM-DD'),
+            fechaFin: rangoFechas[1].format('YYYY-MM-DD'),
+            ...filtrosAvanzados
+          };
           break;
+        case 'todos':
         default:
-          fechaParam = getFechaColombia().format('YYYY-MM-DD');
+          filtros = {};
+          break;
       }
 
-      console.log(`📡 Cargando historial: ${filterType} - ${fechaParam}`);
-      
-      let response;
-      
-      if (filterType === 'personalizado') {
-        // ✅ CONVERTIR FECHAS A UTC PARA EL BACKEND
-        const filtros = {
-          fechaInicio: rangoFechas[0].utc().format('YYYY-MM-DD'),
-          fechaFin: rangoFechas[1].utc().format('YYYY-MM-DD'),
-          ...filtrosAvanzados
-        };
-        
-        // Remover valores vacíos
-        Object.keys(filtros).forEach(key => {
-          if (filtros[key] === null || filtros[key] === '' || 
-              (Array.isArray(filtros[key]) && filtros[key].length === 0)) {
-            delete filtros[key];
-          }
-        });
-        
-        response = await ordenesApi.obtenerHistorialFiltrado(filtros);
-      } else {
-        // ✅ PARA LOS OTROS FILTROS, ENVIAR EN UTC
-        response = await ordenesApi.obtenerHistorialPorFecha(fechaParam);
-      }
-      
+      // Agregar filtros de ordenamiento
+      filtros.ordenarPor = filtrosAvanzados.ordenarPor;
+      filtros.orden = filtrosAvanzados.orden;
+
+      console.log('📡 Cargando historial con filtros:', filtros);
+
+      // ✅ Llamada a la nueva función unificada
+      const response = await ordenesApi.obtenerHistorial(filtros);
+
       console.log('✅ Historial cargado:', response);
-      
+
       if (response.success) {
         // Formatear órdenes
         const ordenesFormateadas = (response.ordenes || []).map(orden => {
@@ -185,7 +181,7 @@ const HistorialOrdenes = () => {
           const tipoLavadoStd = convertirTipoLavadoParaMostrar(
             orden.tipo_lavado || orden.servicios?.[0]?.tipo_lavado
           );
-          
+
           return {
             id: orden._id || orden.id,
             numero_orden: orden.numero_orden,
@@ -209,13 +205,12 @@ const HistorialOrdenes = () => {
             cliente: orden.cliente,
             fecha_creacion: orden.fecha_creacion,
             fecha_cobro: orden.fecha_cobro,
-            // ✅ CONVERTIR HORA A COLOMBIA PARA MOSTRAR
             hora_cobro: orden.fecha_cobro ? getFechaColombia(orden.fecha_cobro).format('HH:mm') : '',
             _original: orden
           };
         });
-        
-        // Aplicar ordenamiento
+
+        // Aplicar ordenamiento local (por si acaso, aunque el backend ya ordena)
         let ordenesOrdenadas = [...ordenesFormateadas];
         if (filtrosAvanzados.ordenarPor === 'fecha') {
           ordenesOrdenadas.sort((a, b) => {
@@ -228,16 +223,16 @@ const HistorialOrdenes = () => {
             return filtrosAvanzados.orden === 'asc' ? a.precio - b.precio : b.precio - a.precio;
           });
         }
-        
+
         setOrdenes(ordenesOrdenadas);
-        
+
         // Calcular estadísticas
         const total = ordenesOrdenadas.length;
         const totalIngresos = ordenesOrdenadas.reduce((sum, o) => sum + o.precio, 0);
         const totalComisiones = ordenesOrdenadas.reduce((sum, o) => sum + o.comision_lavador, 0);
         const gananciaNeta = totalIngresos - totalComisiones;
         const promedioOrden = total > 0 ? totalIngresos / total : 0;
-        
+
         setEstadisticas({
           total,
           totalIngresos,
@@ -246,7 +241,7 @@ const HistorialOrdenes = () => {
           promedioOrden,
           porcentajeComisiones: totalIngresos > 0 ? (totalComisiones / totalIngresos) * 100 : 0
         });
-        
+
         message.success(`✅ Historial cargado: ${ordenesOrdenadas.length} órdenes`);
       } else {
         message.error(response.error || 'Error al cargar el historial');
@@ -259,7 +254,7 @@ const HistorialOrdenes = () => {
     }
   };
 
-  // Funciones de conversión
+  // Funciones de conversión (igual que antes)
   const convertirTipoLavadoParaMostrar = (tipoBackend) => {
     const mapeo = {
       'express': 'express',
@@ -349,7 +344,6 @@ const HistorialOrdenes = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Historial');
 
-      // Ajustar anchos de columna
       const wscols = [
         { wch: 12 }, { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 15 },
         { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 20 }, { wch: 12 },
@@ -357,10 +351,8 @@ const HistorialOrdenes = () => {
       ];
       worksheet['!cols'] = wscols;
 
-      // Generar archivo
       const fecha = getFechaColombia().format('YYYY-MM-DD_HH-mm');
       XLSX.writeFile(workbook, `historial_ordenes_${fecha}.xlsx`);
-      
       message.success('✅ Archivo Excel exportado correctamente');
     } catch (error) {
       console.error('Error exportando a Excel:', error);
@@ -372,26 +364,16 @@ const HistorialOrdenes = () => {
   const exportarPDF = () => {
     try {
       const doc = new jsPDF();
-      
-      // Título
       doc.setFontSize(18);
       doc.text('HISTORIAL DE ÓRDENES - FULLWASH360', 105, 15, { align: 'center' });
-      
-      // Información del reporte
       doc.setFontSize(10);
       doc.text(`Fecha de generación: ${getFechaColombia().format('DD/MM/YYYY HH:mm')}`, 14, 25);
       doc.text(`Total de órdenes: ${ordenesFiltradas.length}`, 14, 32);
-      
       if (estadisticas) {
         doc.text(`Ingresos totales: ${formatCurrency(estadisticas.totalIngresos)}`, 14, 39);
         doc.text(`Comisiones: ${formatCurrency(estadisticas.totalComisiones)}`, 14, 46);
       }
-      
-      // Tabla
-      const tableColumn = [
-        'Orden', 'Fecha', 'Placa', 'Vehículo', 'Servicio', 'Total', 'Lavador'
-      ];
-      
+      const tableColumn = ['Orden', 'Fecha', 'Placa', 'Vehículo', 'Servicio', 'Total', 'Lavador'];
       const tableRows = ordenesFiltradas.map(orden => [
         orden.numero_orden,
         orden.fecha_cobro ? getFechaColombia(orden.fecha_cobro).format('DD/MM/YYYY') : '',
@@ -401,7 +383,6 @@ const HistorialOrdenes = () => {
         formatCurrency(orden.precio),
         orden.lavador_nombre
       ]);
-      
       doc.autoTable({
         head: [tableColumn],
         body: tableRows,
@@ -410,11 +391,8 @@ const HistorialOrdenes = () => {
         headStyles: { fillColor: [41, 128, 185] },
         margin: { top: 55 }
       });
-      
-      // Guardar PDF
       const fecha = getFechaColombia().format('YYYY-MM-DD_HH-mm');
       doc.save(`historial_ordenes_${fecha}.pdf`);
-      
       message.success('✅ Archivo PDF exportado correctamente');
     } catch (error) {
       console.error('Error exportando a PDF:', error);
@@ -438,6 +416,7 @@ const HistorialOrdenes = () => {
     setFilterType('hoy');
     setMostrarFiltros(false);
     message.success('Filtros limpiados');
+    cargarHistorial(); // Recargar con filtros limpios
   };
 
   // Ver detalles de la orden
@@ -477,7 +456,7 @@ const HistorialOrdenes = () => {
     });
   };
 
-  // Filtrar órdenes por búsqueda
+  // Filtrar órdenes por búsqueda (local)
   const ordenesFiltradas = ordenes.filter(orden => {
     if (!search) return true;
     const searchTerm = search.toLowerCase();
@@ -490,7 +469,7 @@ const HistorialOrdenes = () => {
     );
   });
 
-  // Columnas de la tabla
+  // Columnas de la tabla (sin cambios)
   const columns = [
     {
       title: 'Orden',
@@ -628,7 +607,6 @@ const HistorialOrdenes = () => {
               size="small"
               onClick={() => {
                 message.success(`Ticket ${record.numero_orden} enviado a impresión`);
-                // Aquí iría la lógica de impresión real
               }}
             />
           </Tooltip>
@@ -757,17 +735,13 @@ const HistorialOrdenes = () => {
         </Row>
       )}
 
-      {/* Filtros principales - DISEÑO MEJORADO */}
+      {/* Filtros principales */}
       <Card 
         bordered={false}
-        style={{ 
-          marginBottom: '20px',
-          borderRadius: '8px'
-        }}
+        style={{ marginBottom: '20px', borderRadius: '8px' }}
         bodyStyle={{ padding: '20px' }}
       >
         <Row gutter={[16, 16]} align="middle">
-          {/* ✅ CAMBIO 1: Select en lugar de Radio.Group */}
           <Col xs={24} sm={12} md={6}>
             <div>
               <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '13px' }}>
@@ -789,7 +763,6 @@ const HistorialOrdenes = () => {
             </div>
           </Col>
           
-          {/* ✅ CAMBIO 2: Filtros condicionales mejorados */}
           <Col xs={24} sm={12} md={6}>
             {filterType === 'personalizado' && (
               <div>
@@ -821,7 +794,6 @@ const HistorialOrdenes = () => {
             )}
           </Col>
           
-          {/* Búsqueda */}
           <Col xs={24} sm={12} md={6}>
             <div>
               <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '13px' }}>
@@ -838,7 +810,6 @@ const HistorialOrdenes = () => {
             </div>
           </Col>
           
-          {/* Botones de acción */}
           <Col xs={24} sm={12} md={6}>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '30px' }}>
               <Button
@@ -860,7 +831,7 @@ const HistorialOrdenes = () => {
           </Col>
         </Row>
 
-        {/* ✅ CAMBIO 3: Filtros avanzados con diseño mejorado */}
+        {/* Filtros avanzados */}
         {mostrarFiltros && (
           <div style={{ marginTop: '24px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '6px' }}>
             <Title level={5} style={{ marginBottom: '16px' }}>
@@ -985,7 +956,6 @@ const HistorialOrdenes = () => {
                 </Select>
               </Col>
               
-              {/* Botones de acción para filtros */}
               <Col xs={24} style={{ marginTop: '16px' }}>
                 <Divider />
                 <Space wrap>
@@ -1029,10 +999,7 @@ const HistorialOrdenes = () => {
       {/* Tabla de órdenes */}
       <Card
         bordered={false}
-        style={{ 
-          borderRadius: '8px',
-          overflow: 'hidden'
-        }}
+        style={{ borderRadius: '8px', overflow: 'hidden' }}
         bodyStyle={{ padding: 0 }}
       >
         <div style={{ padding: '16px 24px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
