@@ -1,4 +1,4 @@
-// frontend/src/pages/ordenes/NuevaOrden.jsx - VERSIÓN CORREGIDA CON BÚSQUEDA REAL
+// frontend/src/pages/ordenes/NuevaOrden.jsx - ACTUALIZADO PROMOCIÓN 7+1 (8va GRATIS)
 import React, { useState, useEffect } from "react";
 import { 
   Form, Input, Select, Button, message, Card, 
@@ -6,7 +6,7 @@ import {
 } from "antd";
 import { SearchOutlined, LoadingOutlined, UserOutlined, PhoneOutlined } from '@ant-design/icons';
 import ordenesApi from "../../api/ordenesApi";
-import clientesApi from "../../api/clientesApi"; // ✅ NUEVA IMPORTACIÓN
+import clientesApi from "../../api/clientesApi";
 import { CONFIG } from "../../config";
 
 const { Option } = Select;
@@ -21,10 +21,9 @@ const NuevaOrden = () => {
   const [precio, setPrecio] = useState(15000);
   const [infoVehiculo, setInfoVehiculo] = useState(null);
   const [promocionInfo, setPromocionInfo] = useState(null);
-  const [esClienteNuevo, setEsClienteNuevo] = useState(false); // ✅ NUEVO ESTADO
-  const [creandoCliente, setCreandoCliente] = useState(false); // ✅ NUEVO ESTADO
+  const [esClienteNuevo, setEsClienteNuevo] = useState(false);
+  const [creandoCliente, setCreandoCliente] = useState(false);
   
-  // ✅ TIPOS DE VEHÍCULO
   const tiposVehiculo = [
     { value: 'carro', label: '🚗 Carro' },
     { value: 'moto', label: '🏍️ Moto' },
@@ -32,10 +31,8 @@ const NuevaOrden = () => {
     { value: 'camioneta', label: '🚙 Camioneta' }
   ];
 
-  // ✅ TARIFAS (usa las de config o las locales)
   const tarifas = CONFIG.PRECIOS_DEFAULT;
 
-  // ✅ FUNCIÓN PARA BUSCAR CLIENTE POR PLACA (VERSIÓN REAL)
   const buscarVehiculoPorPlaca = async (placa) => {
     if (!placa || placa.length < 3) {
       setInfoVehiculo(null);
@@ -46,19 +43,17 @@ const NuevaOrden = () => {
 
     setBuscandoVehiculo(true);
     try {
-      // ✅ LLAMADA REAL AL BACKEND
       console.log(`🔍 Buscando cliente por placa: ${placa}`);
       const response = await clientesApi.buscarPorPlaca(placa, CONFIG.PUNTO_ID);
       
       console.log("✅ Respuesta de búsqueda:", response);
       
       if (response.success && response.encontrado && response.cliente) {
-        // ✅ CLIENTE ENCONTRADO
         setEsClienteNuevo(false);
         
         const contadorActual = response.contador_actual || 0;
         const proximaLavada = contadorActual + 1;
-        const esDecimaGratis = (proximaLavada === 10);
+        const esOctavaGratis = (proximaLavada === 8); // ✅ Cambiado 10 → 8
         
         setInfoVehiculo({
           placa: response.cliente.placa_vehiculo,
@@ -71,31 +66,26 @@ const NuevaOrden = () => {
         
         setPromocionInfo({
           lavadasParaGratis: contadorActual,
-          esProximaGratis: esDecimaGratis,
-          faltan: 10 - contadorActual,
-          progreso: (contadorActual / 10) * 100,
+          esProximaGratis: esOctavaGratis,
+          faltan: 8 - contadorActual,               // ✅ Cambiado 10 → 8
+          progreso: (contadorActual / 8) * 100,     // ✅ Cambiado 10 → 8
           proximaLavada: proximaLavada
         });
         
-        // ✅ SI EL VEHÍCULO YA TIENE TIPO, SUGERIRLO
         if (response.vehiculo?.tipo_vehiculo && !form.getFieldValue("tipo")) {
           form.setFieldsValue({ tipo: response.vehiculo.tipo_vehiculo });
           handleTipoVehiculoChange(response.vehiculo.tipo_vehiculo);
         }
         
       } else {
-        // ❌ CLIENTE NO ENCONTRADO - Mostrar campos para crear
         setEsClienteNuevo(true);
         setInfoVehiculo(null);
         setPromocionInfo(null);
-        
-        // ✅ RESETEAR CAMPOS DEL CLIENTE
         form.setFieldsValue({
           nombre_cliente: '',
           telefono_cliente: '',
           lavadas_iniciales: 0
         });
-        
         console.log("⚠️ Cliente no encontrado, modo creación activado");
       }
     } catch (error) {
@@ -109,7 +99,6 @@ const NuevaOrden = () => {
     }
   };
 
-  // ✅ MANEJAR CAMBIO DE PLACA
   const handlePlacaChange = (e) => {
     const placa = e.target.value.toUpperCase();
     if (placa.length >= 3) {
@@ -121,7 +110,6 @@ const NuevaOrden = () => {
     }
   };
 
-  // ✅ OBTENER TIPOS DE LAVADO DISPONIBLES
   const getTiposLavadoDisponibles = (tipoVehiculo) => {
     const disponibilidad = {
       carro: ['express', 'premium'],
@@ -132,7 +120,6 @@ const NuevaOrden = () => {
     return disponibilidad[tipoVehiculo] || ['express'];
   };
 
-  // ✅ OBTENER LABEL CON EMOJI Y PRECIO
   const getLabelTipoLavado = (tipo, precio) => {
     const map = { 
       express: '⚡ Express',
@@ -143,7 +130,6 @@ const NuevaOrden = () => {
     return `${label} - $${precio.toLocaleString()}`;
   };
 
-  // ✅ OBTENER LABEL DE TIPO DE VEHÍCULO
   const getLabelTipoVehiculo = (value) => {
     const map = { 
       carro: 'Carro', 
@@ -154,13 +140,10 @@ const NuevaOrden = () => {
     return map[value] || value;
   };
 
-  // ✅ CALCULAR PRECIO CUANDO CAMBIAN LOS SELECTS
   useEffect(() => {
     const tipoVehiculo = form.getFieldValue("tipo");
-    
     if (tipoVehiculo) {
       const tiposDisponibles = getTiposLavadoDisponibles(tipoVehiculo);
-      
       if (!tiposDisponibles.includes(tipoLavado)) {
         const nuevoTipoLavado = tiposDisponibles[0];
         setTipoLavado(nuevoTipoLavado);
@@ -168,8 +151,6 @@ const NuevaOrden = () => {
         setPrecio(precioCalculado);
       } else {
         const precioCalculado = tarifas[tipoVehiculo]?.[tipoLavado] || 15000;
-        
-        // Si la próxima lavada es gratis, precio = 0
         if (promocionInfo?.esProximaGratis) {
           setPrecio(0);
         } else {
@@ -181,15 +162,11 @@ const NuevaOrden = () => {
     }
   }, [form, tipoLavado, promocionInfo]);
 
-  // ✅ MANEJAR CAMBIO DE TIPO DE VEHÍCULO
   const handleTipoVehiculoChange = (value) => {
     const tiposDisponibles = getTiposLavadoDisponibles(value);
     const primerTipoDisponible = tiposDisponibles[0];
     setTipoLavado(primerTipoDisponible);
-    
     const precioCalculado = tarifas[value]?.[primerTipoDisponible] || 15000;
-    
-    // Si la próxima lavada es gratis, precio = 0
     if (promocionInfo?.esProximaGratis) {
       setPrecio(0);
     } else {
@@ -197,14 +174,11 @@ const NuevaOrden = () => {
     }
   };
 
-  // ✅ MANEJAR CAMBIO DE TIPO DE LAVADO
   const handleTipoLavadoChange = (value) => {
     setTipoLavado(value);
     const tipoVehiculo = form.getFieldValue("tipo");
     if (tipoVehiculo) {
       const precioCalculado = tarifas[tipoVehiculo]?.[value] || 15000;
-      
-      // Si la próxima lavada es gratis, precio = 0
       if (promocionInfo?.esProximaGratis) {
         setPrecio(0);
       } else {
@@ -213,11 +187,9 @@ const NuevaOrden = () => {
     }
   };
 
-  // ✅ CREAR CLIENTE NUEVO
   const crearClienteNuevo = async (placa, tipoVehiculo, datosCliente) => {
     try {
       setCreandoCliente(true);
-      
       const clienteData = {
         nombre_completo: datosCliente.nombre_cliente,
         telefono: datosCliente.telefono_cliente,
@@ -228,10 +200,8 @@ const NuevaOrden = () => {
         punto_id: CONFIG.PUNTO_ID,
         usuario_id: CONFIG.USUARIO_ID
       };
-
       console.log("📝 Creando cliente nuevo:", clienteData);
       const response = await clientesApi.crearCliente(clienteData);
-      
       if (response.success) {
         console.log("✅ Cliente creado:", response.cliente);
         return {
@@ -251,7 +221,6 @@ const NuevaOrden = () => {
     }
   };
 
-  // ✅ CREAR ORDEN (VERSIÓN MEJORADA)
   const handleCrearOrden = async (values) => {
     if (!values.placa || !values.tipo) {
       message.error("Placa y tipo de vehículo son obligatorios");
@@ -264,7 +233,6 @@ const NuevaOrden = () => {
       return;
     }
 
-    // ✅ VALIDAR DATOS DE CLIENTE NUEVO
     if (esClienteNuevo) {
       if (!values.nombre_cliente || !values.telefono_cliente) {
         message.error("Para cliente nuevo, nombre y teléfono son obligatorios");
@@ -280,21 +248,18 @@ const NuevaOrden = () => {
       let cliente_nombre = infoVehiculo?.clienteNombre || '';
       let cliente_telefono = infoVehiculo?.clienteTelefono || '';
 
-      // ✅ PASO 1: CREAR CLIENTE SI ES NUEVO
       if (esClienteNuevo) {
         const clienteCreado = await crearClienteNuevo(
           values.placa.toUpperCase(),
           values.tipo,
           values
         );
-        
         cliente_id = clienteCreado.cliente_id;
         vehiculo_id = clienteCreado.vehiculo_id;
         cliente_nombre = clienteCreado.cliente_nombre;
         cliente_telefono = clienteCreado.cliente_telefono;
       }
 
-      // ✅ PASO 2: CREAR LA ORDEN
       const payload = {
         placa: values.placa.toUpperCase(),
         tipo_vehiculo: values.tipo,
@@ -303,8 +268,8 @@ const NuevaOrden = () => {
         notas_cliente: values.comentarios || "",
         usuario_id: CONFIG.USUARIO_ID,
         punto_id: CONFIG.PUNTO_ID,
-        cliente_id: cliente_id,  // ✅ Si es nuevo, ya tiene ID
-        vehiculo_id: vehiculo_id, // ✅ Si es nuevo, ya tiene ID
+        cliente_id: cliente_id,
+        vehiculo_id: vehiculo_id,
         es_decima_gratis: promocionInfo?.esProximaGratis || false
       };
 
@@ -314,9 +279,9 @@ const NuevaOrden = () => {
       if (res && res.success) {
         let mensajePromocion = '';
         if (promocionInfo?.esProximaGratis) {
-          mensajePromocion = ' 🎉 ¡LAVADA GRATIS APLICADA! (Promoción 9+1)';
+          mensajePromocion = ' 🎉 ¡LAVADA GRATIS APLICADA! (Promoción 7+1)'; // ✅ Cambiado 9+1 → 7+1
         } else if (promocionInfo) {
-          mensajePromocion = ` 📊 ${promocionInfo.lavadasParaGratis}/10 lavadas (${promocionInfo.faltan} para gratis)`;
+          mensajePromocion = ` 📊 ${promocionInfo.lavadasParaGratis}/8 lavadas (${promocionInfo.faltan} para gratis)`; // ✅ Cambiado 10 → 8
         }
 
         const mensajeCliente = esClienteNuevo 
@@ -341,7 +306,7 @@ const NuevaOrden = () => {
                   </Text>
                 </div>
                 {promocionInfo && !promocionInfo.esProximaGratis && (
-                  <div><Text strong>Próxima lavada:</Text> <Text>#{promocionInfo.proximaLavada}/10</Text></div>
+                  <div><Text strong>Próxima lavada:</Text> <Text>#{promocionInfo.proximaLavada}/8</Text></div> // ✅ Cambiado 10 → 8
                 )}
                 {values.comentarios && (
                   <div><Text strong>Observaciones:</Text> <Text>{values.comentarios}</Text></div>
@@ -352,7 +317,6 @@ const NuevaOrden = () => {
           duration: 8,
         });
         
-        // ✅ RESETEAR FORMULARIO
         form.resetFields();
         setTipoLavado("express");
         setPrecio(15000);
@@ -368,7 +332,6 @@ const NuevaOrden = () => {
       console.error("❌ Error:", error);
       const errorMsg = error.response?.data?.message || error.message || "Error al crear la orden";
       message.error(errorMsg);
-      
     } finally {
       setLoading(false);
     }
@@ -389,7 +352,6 @@ const NuevaOrden = () => {
       />
       
       <Form form={form} layout="vertical" onFinish={handleCrearOrden}>
-        {/* Placa con búsqueda */}
         <Form.Item
           label="Placa del vehículo"
           name="placa"
@@ -406,7 +368,6 @@ const NuevaOrden = () => {
           />
         </Form.Item>
 
-        {/* Información del vehículo encontrado */}
         {infoVehiculo && !esClienteNuevo && (
           <Alert
             message={
@@ -421,7 +382,7 @@ const NuevaOrden = () => {
             description={
               promocionInfo ? (
                 <div>
-                  <Text>Promoción 9+1: {promocionInfo.lavadasParaGratis}/10 lavadas</Text>
+                  <Text>Promoción 7+1: {promocionInfo.lavadasParaGratis}/8 lavadas</Text> {/* ✅ Cambiado 9+1 → 7+1, 10 → 8 */}
                   <Text> - Próxima lavada: #{promocionInfo.proximaLavada}</Text>
                   {promocionInfo.esProximaGratis && (
                     <div style={{ marginTop: 4 }}>
@@ -452,13 +413,8 @@ const NuevaOrden = () => {
           />
         )}
 
-        {/* Formulario para cliente nuevo */}
         {esClienteNuevo && (
-          <Collapse 
-            defaultActiveKey={['1']} 
-            style={{ marginBottom: 16 }}
-            bordered={false}
-          >
+          <Collapse defaultActiveKey={['1']} style={{ marginBottom: 16 }} bordered={false}>
             <Panel 
               header={
                 <div>
@@ -508,10 +464,10 @@ const NuevaOrden = () => {
               <Form.Item
                 label="Lavadas iniciales (opcional)"
                 name="lavadas_iniciales"
-                extra="Si el cliente ya ha tenido lavadas anteriores, indica cuántas (0-9)"
+                extra="Si el cliente ya ha tenido lavadas anteriores, indica cuántas (0-7)" // ✅ Cambiado 9 → 7
               >
                 <Select defaultValue={0} size="large">
-                  {[0,1,2,3,4,5,6,7,8,9].map(num => (
+                  {[0,1,2,3,4,5,6,7].map(num => ( // ✅ Eliminados 8 y 9 (solo hasta 7)
                     <Option key={num} value={num}>
                       {num} lavada{num !== 1 ? 's' : ''} realizada{num !== 1 ? 's' : ''}
                     </Option>
@@ -530,7 +486,6 @@ const NuevaOrden = () => {
         )}
 
         <Row gutter={16}>
-          {/* Tipo de vehículo */}
           <Col span={12}>
             <Form.Item
               label="Tipo de vehículo"
@@ -552,7 +507,6 @@ const NuevaOrden = () => {
             </Form.Item>
           </Col>
 
-          {/* Tipo de lavado */}
           <Col span={12}>
             <Form.Item label="Tipo de lavado" required>
               <Select 
@@ -574,7 +528,6 @@ const NuevaOrden = () => {
           </Col>
         </Row>
 
-        {/* Precio Calculado */}
         <Divider />
         <Card size="small" style={{ 
           backgroundColor: promocionInfo?.esProximaGratis ? '#f6ffed' : '#f0f8ff',
@@ -613,13 +566,12 @@ const NuevaOrden = () => {
           {promocionInfo && !promocionInfo.esProximaGratis && (
             <div>
               <Text type="secondary" style={{ display: 'block', marginTop: 4, fontSize: '12px' }}>
-                Próxima lavada: #{promocionInfo.proximaLavada}/10 • {promocionInfo.faltan} para gratis
+                Próxima lavada: #{promocionInfo.proximaLavada}/8 • {promocionInfo.faltan} para gratis {/* ✅ Cambiado 10 → 8 */}
               </Text>
             </div>
           )}
         </Card>
 
-        {/* Observaciones */}
         <Form.Item label="Observaciones (opcional)" name="comentarios">
           <Input.TextArea 
             rows={2} 
@@ -630,7 +582,6 @@ const NuevaOrden = () => {
           />
         </Form.Item>
 
-        {/* Botón */}
         <Form.Item>
           <Button 
             type="primary" 
@@ -653,7 +604,6 @@ const NuevaOrden = () => {
           </Button>
         </Form.Item>
 
-        {/* Info de precios */}
         <Alert
           message="Tarifas vigentes"
           description={
@@ -684,7 +634,7 @@ const NuevaOrden = () => {
               <Divider style={{ margin: '8px 0' }} />
               <div>
                 <Text type="secondary">
-                  💡 <strong>Promoción 9+1:</strong> Cada 10ma lavada es GRATIS para clientes frecuentes.
+                  💡 <strong>Promoción 7+1:</strong> Cada 8va lavada es GRATIS para clientes frecuentes. {/* ✅ Cambiado 9+1 → 7+1, 10ma → 8va */}
                 </Text>
               </div>
             </div>

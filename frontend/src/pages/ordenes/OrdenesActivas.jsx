@@ -1,4 +1,4 @@
-// frontend/src/pages/ordenes/OrdenesActivas.jsx - VERSIÓN FINAL CORREGIDA (58mm, nítido, vertical)
+// frontend/src/pages/ordenes/OrdenesActivas.jsx - ACTUALIZADO PROMOCIÓN 7+1 (8va GRATIS)
 import React, { useState, useEffect } from "react";
 import {
   Table, Button, Card, Typography, Tag, message,
@@ -30,308 +30,279 @@ const OrdenesActivas = () => {
   const [lavadores, setLavadores] = useState([]);
   const [loadingLavadores, setLoadingLavadores] = useState(false);
   
-  // Estados para el modal de cobro
   const [modalVisible, setModalVisible] = useState(false);
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
   const [cobrando, setCobrando] = useState(false);
   const [form] = Form.useForm();
   
-  // Estados para búsqueda
   const [searchText, setSearchText] = useState('');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [backendConectado, setBackendConectado] = useState(false);
 
   // ====================================================
-// ✅ FUNCIÓN CORREGIDA PARA IMPRESORA 58mm - NITIDEZ MÁXIMA
-// ====================================================
-const imprimirTicket = (orden, lavador, datosCobro) => {
-  try {
-    console.log("🖨️  Iniciando impresión del ticket...", { orden, lavador, datosCobro });
+  // ✅ FUNCIÓN IMPRIMIR TICKET - ACTUALIZADA A 7+1 (8va GRATIS)
+  // ====================================================
+  const imprimirTicket = (orden, lavador, datosCobro) => {
+    try {
+      console.log("🖨️  Iniciando impresión del ticket...", { orden, lavador, datosCobro });
 
-    // Preparar datos del lavador
-    let lavadorInfo = lavador;
-    if (typeof lavador === 'string') {
-      lavadorInfo = lavadores.find(l => l._id === lavador) || {
-        nombre: 'No asignado',
-        codigo: 'N/A'
-      };
-    }
+      let lavadorInfo = lavador;
+      if (typeof lavador === 'string') {
+        lavadorInfo = lavadores.find(l => l._id === lavador) || {
+          nombre: 'No asignado',
+          codigo: 'N/A'
+        };
+      }
 
-    // HTML optimizado para máxima nitidez en 58mm
-    const contenidoHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Ticket ${orden.numero_orden || 'ORD-0000'}</title>
-        <meta charset="UTF-8">
-        <style>
-          /* === CONFIGURACIÓN DE ALTA CALIDAD PARA IMPRESIÓN === */
-          @media print {
-            @page {
-              size: 58mm auto portrait;
-              margin: 0mm;
-              padding: 0mm;
+      const contenidoHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Ticket ${orden.numero_orden || 'ORD-0000'}</title>
+          <meta charset="UTF-8">
+          <style>
+            @media print {
+              @page {
+                size: 58mm auto portrait;
+                margin: 0mm;
+                padding: 0mm;
+              }
+              body {
+                margin: 0 !important;
+                padding: 2mm !important;
+                width: 58mm !important;
+                background: white !important;
+                color: #000000 !important;
+                font-family: 'Courier New', Courier, monospace !important;
+                font-size: 11pt !important;
+                line-height: 1.2 !important;
+                font-weight: 700 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                -webkit-font-smoothing: antialiased !important;
+                text-rendering: optimizeLegibility !important;
+              }
             }
-            
-            body {
-              margin: 0 !important;
-              padding: 2mm !important;
-              width: 58mm !important;
-              background: white !important;
-              color: #000000 !important;
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
               font-family: 'Courier New', Courier, monospace !important;
-              font-size: 11pt !important;      /* Ligero aumento para mejor legibilidad */
-              line-height: 1.2 !important;
-              font-weight: 700 !important;      /* Negrita general */
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-              color-adjust: exact !important;
-              -webkit-font-smoothing: antialiased !important;
-              text-rendering: optimizeLegibility !important;
+              color: #000000 !important;
+              background: transparent !important;
+              border-color: #000000 !important;
+              font-weight: 700 !important;
             }
-          }
-
-          /* === ESTILOS BASE (también aplican en pantalla) === */
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Courier New', Courier, monospace !important;
-            color: #000000 !important;
-            background: transparent !important;
-            border-color: #000000 !important;
-            font-weight: 700 !important;        /* Todo negrita por defecto */
-          }
-
-          body {
-            width: 58mm;
-            margin: 0 auto;
-            padding: 2mm;
-            background: white;
-            font-size: 11pt;
-            line-height: 1.2;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-          }
-
-          .ticket {
-            width: 100%;
-            border: 1.2pt solid black;          /* Borde más grueso */
-            padding: 3mm 2mm;
-          }
-
-          .no-print {
-            display: none !important;
-          }
-
-          .center {
-            text-align: center;
-          }
-
-          .bold {
-            font-weight: 900 !important;        /* Extra bold */
-          }
-
-          .divider {
-            border-top: 1.2pt solid black;      /* Línea más gruesa */
-            margin: 5px 0;
-            height: 0;
-          }
-
-          .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 3px;
-          }
-
-          .label {
-            font-weight: 900 !important;        /* Máxima negrita */
-            min-width: 42%;
-          }
-
-          .value {
-            text-align: right;
-            font-weight: 700 !important;
-          }
-
-          .total-block {
-            margin: 8px 0;
-            padding: 6px 0;
-            border-top: 2pt solid black;
-            border-bottom: 2pt solid black;
-            text-align: center;
-          }
-
-          .total-number {
-            font-size: 16pt;                   /* Más grande y negrita */
-            font-weight: 900 !important;
-          }
-
-          .footer {
-            margin-top: 8px;
-            font-size: 10pt;
-            text-align: center;
-          }
-
-          /* === SOLO PARA VISTA PREVIA EN PANTALLA === */
-          @media screen {
             body {
+              width: 58mm;
+              margin: 0 auto;
+              padding: 2mm;
               background: white;
-              padding: 5mm;
+              font-size: 11pt;
+              line-height: 1.2;
+              -webkit-font-smoothing: antialiased;
+              text-rendering: optimizeLegibility;
             }
             .ticket {
-              box-shadow: 0 0 5px rgba(0,0,0,0.2);
+              width: 100%;
+              border: 1.2pt solid black;
+              padding: 3mm 2mm;
             }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="ticket">
-          <!-- ENCABEZADO -->
-          <div class="center bold" style="font-size: 16pt;">🚗 FULLWASH 360</div>
-          <div class="center" style="font-size: 11pt; font-weight: 700;">LAVADO DE VEHÍCULOS</div>
-          <div class="center" style="font-size: 9pt; font-weight: 700; margin-bottom: 4px;">Calidad y rapidez garantizada</div>
-          <div class="divider"></div>
+            .no-print {
+              display: none !important;
+            }
+            .center {
+              text-align: center;
+            }
+            .bold {
+              font-weight: 900 !important;
+            }
+            .divider {
+              border-top: 1.2pt solid black;
+              margin: 5px 0;
+              height: 0;
+            }
+            .info-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 3px;
+            }
+            .label {
+              font-weight: 900 !important;
+              min-width: 42%;
+            }
+            .value {
+              text-align: right;
+              font-weight: 700 !important;
+            }
+            .total-block {
+              margin: 8px 0;
+              padding: 6px 0;
+              border-top: 2pt solid black;
+              border-bottom: 2pt solid black;
+              text-align: center;
+            }
+            .total-number {
+              font-size: 16pt;
+              font-weight: 900 !important;
+            }
+            .footer {
+              margin-top: 8px;
+              font-size: 10pt;
+              text-align: center;
+            }
+            @media screen {
+              body {
+                background: white;
+                padding: 5mm;
+              }
+              .ticket {
+                box-shadow: 0 0 5px rgba(0,0,0,0.2);
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="ticket">
+            <div class="center bold" style="font-size: 16pt;">🚗 FULLWASH 360</div>
+            <div class="center" style="font-size: 11pt; font-weight: 700;">LAVADO DE VEHÍCULOS</div>
+            <div class="center" style="font-size: 9pt; font-weight: 700; margin-bottom: 4px;">Calidad y rapidez garantizada</div>
+            <div class="divider"></div>
 
-          <!-- TICKET Y FECHA -->
-          <div class="info-row">
-            <span class="label">TICKET N°:</span>
-            <span class="value">${orden.numero_orden || 'ORD-0000'}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">FECHA/HORA:</span>
-            <span class="value">${new Date().toLocaleDateString('es-CO', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}</span>
-          </div>
-          <div class="divider"></div>
-
-          <!-- VEHÍCULO -->
-          <div class="info-row">
-            <span class="label">PLACA:</span>
-            <span class="value">${orden.placa?.toUpperCase() || 'SIN PLACA'}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">VEHÍCULO:</span>
-            <span class="value">${orden.tipo_vehiculo?.toUpperCase() || 'CARRO'}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">SERVICIO:</span>
-            <span class="value">${orden.servicios?.[0]?.nombre || 'Lavado Express'}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">LAVADOR:</span>
-            <span class="value">${lavadorInfo?.nombre || 'No asignado'}</span>
-          </div>
-
-          <!-- CONTADOR -->
-          <div class="info-row">
-            <span class="label">LAVADA N°:</span>
-            <span class="value">
-              ${orden.contador_lavada || 1}/10
-              ${orden.es_decima_gratis ? '🎉 GRATIS' : ''}
-            </span>
-          </div>
-          <div class="divider"></div>
-
-          <!-- TOTAL Y PAGO -->
-          <div class="total-block">
-            <div style="font-size: 11pt; font-weight: 700;">TOTAL A PAGAR</div>
-            <div class="total-number">
-              ${orden.es_decima_gratis ? 'GRATIS 🎉' : `$${orden.total?.toLocaleString() || '0'}`}
-            </div>
-          </div>
-
-          <div class="info-row">
-            <span class="label">MÉTODO DE PAGO:</span>
-            <span class="value">${datosCobro?.metodo_pago?.toUpperCase() || 'EFECTIVO'}</span>
-          </div>
-
-          ${datosCobro?.pago_recibido ? `
             <div class="info-row">
-              <span class="label">PAGO RECIBIDO:</span>
-              <span class="value">$${datosCobro.pago_recibido.toLocaleString()}</span>
+              <span class="label">TICKET N°:</span>
+              <span class="value">${orden.numero_orden || 'ORD-0000'}</span>
             </div>
-          ` : ''}
-
-          ${datosCobro?.vuelto > 0 ? `
             <div class="info-row">
-              <span class="label">VUELTO:</span>
-              <span class="value">$${datosCobro.vuelto.toLocaleString()}</span>
+              <span class="label">FECHA/HORA:</span>
+              <span class="value">${new Date().toLocaleDateString('es-CO', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}</span>
             </div>
-          ` : ''}
+            <div class="divider"></div>
 
-          <div class="divider"></div>
-
-          <!-- PIE -->
-          <div class="footer">
-            <div style="font-weight: 900; font-size: 11pt;">¡Gracias por su preferencia!</div>
-            <div style="font-size: 9pt; font-weight: 700;">Sistema de fidelización 9+1</div>
-            <div style="font-size: 8pt; font-weight: 700; margin-top: 2px;">
-              FULLWASH 360 • ${new Date().getFullYear()}
+            <div class="info-row">
+              <span class="label">PLACA:</span>
+              <span class="value">${orden.placa?.toUpperCase() || 'SIN PLACA'}</span>
             </div>
+            <div class="info-row">
+              <span class="label">VEHÍCULO:</span>
+              <span class="value">${orden.tipo_vehiculo?.toUpperCase() || 'CARRO'}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">SERVICIO:</span>
+              <span class="value">${orden.servicios?.[0]?.nombre || 'Lavado Express'}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">LAVADOR:</span>
+              <span class="value">${lavadorInfo?.nombre || 'No asignado'}</span>
+            </div>
+
+            <div class="info-row">
+              <span class="label">LAVADA N°:</span>
+              <span class="value">
+                ${orden.contador_lavada || 1}/8          {/* ✅ Cambiado 10 → 8 */}
+                ${orden.es_decima_gratis ? '🎉 GRATIS' : ''}
+              </span>
+            </div>
+            <div class="divider"></div>
+
+            <div class="total-block">
+              <div style="font-size: 11pt; font-weight: 700;">TOTAL A PAGAR</div>
+              <div class="total-number">
+                ${orden.es_decima_gratis ? 'GRATIS 🎉' : `$${orden.total?.toLocaleString() || '0'}`}
+              </div>
+            </div>
+
+            <div class="info-row">
+              <span class="label">MÉTODO DE PAGO:</span>
+              <span class="value">${datosCobro?.metodo_pago?.toUpperCase() || 'EFECTIVO'}</span>
+            </div>
+
+            ${datosCobro?.pago_recibido ? `
+              <div class="info-row">
+                <span class="label">PAGO RECIBIDO:</span>
+                <span class="value">$${datosCobro.pago_recibido.toLocaleString()}</span>
+              </div>
+            ` : ''}
+
+            ${datosCobro?.vuelto > 0 ? `
+              <div class="info-row">
+                <span class="label">VUELTO:</span>
+                <span class="value">$${datosCobro.vuelto.toLocaleString()}</span>
+              </div>
+            ` : ''}
+
+            <div class="divider"></div>
+
+            <div class="footer">
+              <div style="font-weight: 900; font-size: 11pt;">¡Gracias por su preferencia!</div>
+              <div style="font-size: 9pt; font-weight: 700;">Sistema de fidelización 7+1</div> {/* ✅ Cambiado 9+1 → 7+1 */}
+              <div style="font-size: 8pt; font-weight: 700; margin-top: 2px;">
+                FULLWASH 360 • ${new Date().getFullYear()}
+              </div>
+            </div>
+
+            <button class="no-print" onclick="window.print()" style="
+              display: block;
+              width: 100%;
+              margin-top: 15px;
+              padding: 12px;
+              background: black;
+              color: white !important;
+              border: none;
+              border-radius: 4px;
+              font-size: 12px;
+              font-weight: bold;
+              cursor: pointer;
+            ">
+              🖨️ IMPRIMIR TICKET
+            </button>
           </div>
 
-          <!-- BOTÓN DE IMPRESIÓN MANUAL -->
-          <button class="no-print" onclick="window.print()" style="
-            display: block;
-            width: 100%;
-            margin-top: 15px;
-            padding: 12px;
-            background: black;
-            color: white !important;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-          ">
-            🖨️ IMPRIMIR TICKET
-          </button>
-        </div>
-
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
+          <script>
+            window.onload = function() {
               setTimeout(function() {
-                window.close();
-              }, 800);
-            }, 300);
-          };
-        </script>
-      </body>
-      </html>
-    `;
+                window.print();
+                setTimeout(function() {
+                  window.close();
+                }, 800);
+              }, 300);
+            };
+          </script>
+        </body>
+        </html>
+      `;
 
-    const ventanaImpresion = window.open('', '_blank', 'width=400,height=600,scrollbars=yes');
-    if (!ventanaImpresion) {
-      message.warning('Permite ventanas emergentes para imprimir. O usa Ctrl+P.');
-      return;
+      const ventanaImpresion = window.open('', '_blank', 'width=400,height=600,scrollbars=yes');
+      if (!ventanaImpresion) {
+        message.warning('Permite ventanas emergentes para imprimir. O usa Ctrl+P.');
+        return;
+      }
+
+      ventanaImpresion.document.open();
+      ventanaImpresion.document.write(contenidoHTML);
+      ventanaImpresion.document.close();
+
+      console.log('✅ Ticket generado con nitidez máxima');
+    } catch (error) {
+      console.error('❌ Error al generar el ticket:', error);
     }
+  };
 
-    ventanaImpresion.document.open();
-    ventanaImpresion.document.write(contenidoHTML);
-    ventanaImpresion.document.close();
-
-    console.log('✅ Ticket generado con nitidez máxima');
-  } catch (error) {
-    console.error('❌ Error al generar el ticket:', error);
-  }
-};
   // ====================================================
-  // ✅ FUNCIÓN MODIFICADA PARA COBRAR CON IMPRESIÓN (CORREGIDA)
+  // ✅ FUNCIÓN COBRAR ORDEN CON IMPRESIÓN
   // ====================================================
   const handleCobrarOrden = async (values) => {
     if (!ordenSeleccionada) return;
     
     setCobrando(true);
     try {
-      // Buscar lavador seleccionado
       const lavadorSeleccionado = lavadores.find(l => l._id === values.lavador_asignado);
       
       const payload = {
@@ -346,7 +317,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
       const res = await ordenesApi.cobrarOrden(ordenSeleccionada._id, payload);
       
       if (res && (res.success || res._id)) {
-        // Mensaje de éxito
         message.success({
           content: (
             <div>
@@ -369,7 +339,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
           duration: 5
         });
         
-        // ✅ IMPRIMIR TICKET CON DATOS ACTUALIZADOS
         const ordenActualizada = {
           ...ordenSeleccionada,
           total: res.orden?.total || ordenSeleccionada.total,
@@ -381,7 +350,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
             : ordenSeleccionada.es_decima_gratis
         };
         
-        // ✅ LLAMAR A LA FUNCIÓN DE IMPRESIÓN
         imprimirTicket(
           ordenActualizada,
           lavadorSeleccionado,
@@ -393,10 +361,8 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
           }
         );
         
-        // Cerrar modal y actualizar lista
         cerrarModal();
         cargarOrdenesActivas();
-        
       } else {
         message.error(res?.message || "Error al cobrar la orden");
       }
@@ -418,22 +384,16 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
       
       console.log("📥 Respuesta del backend:", res);
       
-      // ✅ VERIFICAR SI EL BACKEND ESTÁ CONECTADO
       if (res && res.success === false) {
-        // El backend respondió pero con error
         setBackendConectado(false);
         message.warning(res.message || "Error al conectar con el servidor");
-        
-        // ✅ NO USAR DATOS MOCK - Dejar array vacío
         setOrdenes([]);
         setFilteredOrdenes([]);
         return;
       }
       
-      // ✅ BACKEND CONECTADO CORRECTAMENTE
       setBackendConectado(true);
       
-      // ✅ MANEJO DE DIFERENTES FORMATOS DE RESPUESTA
       let ordenesArray = [];
       
       if (Array.isArray(res)) {
@@ -446,7 +406,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
         ordenesArray = [res.ordenes];
       }
       
-      // ✅ FORMATO CONSISTENTE PARA LAS ÓRDENES
       const ordenesFormateadas = ordenesArray.map(orden => ({
         ...orden,
         key: orden._id,
@@ -454,7 +413,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
           dayjs(orden.fecha_creacion).fromNow() : '--',
         minutosTranscurridos: orden.fecha_creacion ? 
           Math.floor((new Date() - new Date(orden.fecha_creacion)) / (1000 * 60)) : 0,
-        // ✅ Asegurar que contador_lavada sea un número (1-10)
         contador_lavada: orden.contador_lavada && 
           typeof orden.contador_lavada === 'number' ? 
           orden.contador_lavada : 1
@@ -469,8 +427,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
       console.error("❌ Error cargando órdenes:", error);
       setBackendConectado(false);
       message.error("Error de conexión con el servidor. Verifica que el backend esté corriendo.");
-      
-      // ✅ NO USAR DATOS MOCK - Dejar arrays vacíos
       setOrdenes([]);
       setFilteredOrdenes([]);
     } finally {
@@ -485,7 +441,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
     setLoadingLavadores(true);
     try {
       const data = await ordenesApi.obtenerLavadores();
-      
       if (Array.isArray(data)) {
         setLavadores(data);
       } else if (data && Array.isArray(data.lavadores)) {
@@ -496,8 +451,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
       }
     } catch (error) {
       console.error("❌ Error cargando lavadores:", error);
-      
-      // ✅ NO USAR DATOS MOCK - Dejar array vacío
       setLavadores([]);
       message.warning("No se pudieron cargar los lavadores. Verifica la conexión.");
     } finally {
@@ -505,13 +458,11 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
     }
   };
 
-  // Cargar datos iniciales
   useEffect(() => {
     cargarOrdenesActivas();
     cargarLavadores();
   }, []);
 
-  // Auto-refresh cada 30 segundos
   useEffect(() => {
     let interval;
     if (autoRefresh && backendConectado) {
@@ -522,23 +473,19 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
     return () => clearInterval(interval);
   }, [autoRefresh, backendConectado]);
 
-  // Filtrar órdenes por búsqueda
   useEffect(() => {
     if (!searchText.trim()) {
       setFilteredOrdenes(ordenes);
       return;
     }
-    
     const filtered = ordenes.filter(orden => 
       orden.placa?.toLowerCase().includes(searchText.toLowerCase()) ||
       orden.numero_orden?.toLowerCase().includes(searchText.toLowerCase()) ||
       orden.tipo_vehiculo?.toLowerCase().includes(searchText.toLowerCase())
     );
-    
     setFilteredOrdenes(filtered);
   }, [searchText, ordenes]);
 
-  // Abrir modal para cobrar una orden
   const abrirModalCobro = (orden) => {
     setOrdenSeleccionada(orden);
     form.setFieldsValue({
@@ -549,37 +496,32 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
     setModalVisible(true);
   };
 
-  // Cerrar modal
   const cerrarModal = () => {
     setModalVisible(false);
     setOrdenSeleccionada(null);
     form.resetFields();
   };
 
-  // Función para cancelar orden
   const handleCancelarOrden = async (ordenId) => {
     try {
-      // TODO: Implementar API para cancelar
       message.info("Función de cancelar pendiente de implementar");
     } catch (error) {
       console.error("Error cancelando orden:", error);
     }
   };
 
-  // Calcular estadísticas
   const calcularEstadisticas = () => {
     const totalOrdenes = filteredOrdenes.length;
     const totalVentas = filteredOrdenes.reduce((sum, orden) => sum + (orden.total || 0), 0);
     const promedioTiempo = filteredOrdenes.length > 0
       ? filteredOrdenes.reduce((sum, orden) => sum + (orden.minutosTranscurridos || 0), 0) / filteredOrdenes.length
       : 0;
-
     return { totalOrdenes, totalVentas, promedioTiempo };
   };
 
   const estadisticas = calcularEstadisticas();
 
-  // ✅ COLUMNAS DE LA TABLA (CON COLUMNA DE CONTADOR AÑADIDA)
+  // ✅ COLUMNAS DE LA TABLA - ACTUALIZADAS
   const columns = [
     {
       title: 'N° Orden',
@@ -614,7 +556,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
           taxi: '🚕',
           camioneta: '🚙'
         }[tipo] || '🚗';
-        
         return (
           <div>
             <div>{icono} {tipo}</div>
@@ -643,8 +584,8 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
       key: 'contador',
       width: 100,
       render: (_, record) => (
-        <Tag color={record.contador_lavada === 10 ? "green" : "blue"}>
-          <NumberOutlined /> {record.contador_lavada || 1}/10
+        <Tag color={record.es_decima_gratis ? "green" : "blue"}> {/* ✅ Cambiado condición a es_decima_gratis */}
+          <NumberOutlined /> {record.contador_lavada || 1}/8  {/* ✅ Cambiado 10 → 8 */}
           {record.es_decima_gratis && " 🎉"}
         </Tag>
       )
@@ -658,7 +599,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
         let color = 'green';
         if (minutos > 60) color = 'red';
         else if (minutos > 30) color = 'orange';
-        
         return (
           <Tag color={color} icon={<ClockCircleOutlined />}>
             {minutos} min
@@ -678,7 +618,7 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
           </Text>
           {record.es_decima_gratis && (
             <div style={{ fontSize: '10px', color: '#52c41a' }}>
-              ¡Gratis! (10ma)
+              ¡Gratis! (8va) {/* ✅ Cambiado 10ma → 8va */}
             </div>
           )}
         </div>
@@ -762,7 +702,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
         }
         style={{ marginBottom: 20 }}
       >
-        {/* Barra de búsqueda y estadísticas */}
         <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
           <Col span={12}>
             <Input
@@ -884,7 +823,7 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
         )}
       </Card>
 
-      {/* Modal para cobrar orden */}
+      {/* Modal para cobrar orden - ACTUALIZADO */}
       <Modal
         title={
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -904,7 +843,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
       >
         {ordenSeleccionada && (
           <div>
-            {/* Detalles de la orden */}
             <Card 
               size="small" 
               style={{ 
@@ -953,12 +891,12 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
                     </Title>
                     {ordenSeleccionada.es_decima_gratis && (
                       <Tag color="green" style={{ fontSize: '14px', padding: '4px 8px' }}>
-                        🎉 ¡LAVADA GRATIS! (Promoción 9+1)
+                        🎉 ¡LAVADA GRATIS! (Promoción 7+1) {/* ✅ Cambiado 9+1 → 7+1 */}
                       </Tag>
                     )}
                     {ordenSeleccionada.contador_lavada && (
                       <div style={{ marginTop: '8px', fontSize: '12px', color: '#1890ff' }}>
-                        <Text strong>Contador lavadas: {ordenSeleccionada.contador_lavada}/10</Text>
+                        <Text strong>Contador lavadas: {ordenSeleccionada.contador_lavada}/8</Text> {/* ✅ Cambiado 10 → 8 */}
                       </div>
                     )}
                   </div>
@@ -966,7 +904,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
               </Row>
             </Card>
 
-            {/* Formulario de cobro */}
             <Form
               form={form}
               layout="vertical"
@@ -1040,12 +977,10 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
                 />
               </Form.Item>
 
-              {/* Mostrar vuelto calculado */}
               <Form.Item shouldUpdate>
                 {() => {
                   const pagoRecibido = form.getFieldValue('pago_recibido') || 0;
                   const vuelto = Math.max(0, pagoRecibido - ordenSeleccionada.total);
-                  
                   return vuelto > 0 ? (
                     <Alert
                       message={`Vuelto: $${vuelto.toLocaleString()}`}
@@ -1057,7 +992,6 @@ const imprimirTicket = (orden, lavador, datosCobro) => {
                 }}
               </Form.Item>
 
-              {/* Mostrar comisión calculada */}
               <Alert
                 message="Sistema de Comisiones (Interno)"
                 description={

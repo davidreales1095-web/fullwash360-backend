@@ -38,11 +38,11 @@ const ordenSchema = new mongoose.Schema({
   contador_lavada: { 
     type: Number, 
     default: 1,
-    min: 1,        // ✅ AÑADIDO
-    max: 10        // ✅ AÑADIDO
+    min: 1,
+    max: 8        // ✅ Cambiado de 10 → 8
   },
-  es_decima_gratis: { type: Boolean, default: false },
-  total_lavadas_meta: { type: Number, default: 10 },
+  es_decima_gratis: { type: Boolean, default: false }, // Nombre se mantiene por compatibilidad
+  total_lavadas_meta: { type: Number, default: 8 },    // ✅ Cambiado de 10 → 8
   notas_cliente: { type: String, default: '' },
   impreso: { type: Boolean, default: false },
   estado: { type: String, enum: ['activa','completada','cancelada'], default: 'activa', index: true }
@@ -53,7 +53,7 @@ ordenSchema.index({ punto_id: 1, fecha_creacion: -1 });
 ordenSchema.index({ punto_id: 1, fecha_cobro: -1 });
 ordenSchema.index({ lavador_asignado: 1, fecha_cobro: -1 });
 ordenSchema.index({ placa: 1, punto_id: 1 });
-ordenSchema.index({ estado: 1, punto_id: 1 }); // Nuevo índice para órdenes activas
+ordenSchema.index({ estado: 1, punto_id: 1 });
 
 // Número de orden automático
 ordenSchema.pre('save', async function(next) {
@@ -73,7 +73,6 @@ ordenSchema.pre('save', async function(next) {
 
 // Middleware para calcular comisión automáticamente cuando se marca como completada
 ordenSchema.pre('save', function(next) {
-  // Si se está completando la orden y tiene lavador, calcular comisión
   if (this.estado === 'completada' && this.lavador_asignado && !this.comision_lavador.monto) {
     const porcentaje = this.comision_lavador.porcentaje || 40;
     this.comision_lavador.monto = (this.total * porcentaje) / 100;
@@ -81,14 +80,6 @@ ordenSchema.pre('save', function(next) {
     this.comision_lavador.pagado = false;
     this.comision_lavador.fecha_pago = null;
   }
-  
-  // ✅ COMENTADO: Ya se maneja en el controlador
-  // Si es la décima gratis, ajustar total a 0
-  // if (this.es_decima_gratis && this.estado === 'completada') {
-  //   this.total = 0;
-  //   this.comision_lavador.monto = 0;
-  // }
-  
   next();
 });
 
@@ -97,12 +88,9 @@ ordenSchema.methods.cobrarOrden = function(lavadorId, lavadorNombre) {
   this.estado = 'completada';
   this.fecha_cobro = new Date();
   this.lavador_asignado = lavadorId;
-  
-  // Si no tiene nombre de lavador, asignarlo
   if (!this.comision_lavador.lavador_nombre && lavadorNombre) {
     this.comision_lavador.lavador_nombre = lavadorNombre;
   }
-  
   return this.save();
 };
 
@@ -111,7 +99,7 @@ ordenSchema.statics.obtenerOrdenesActivas = function(puntoId) {
   return this.find({
     punto_id: puntoId,
     estado: 'activa',
-    lavador_asignado: null // Solo órdenes sin lavador asignado
+    lavador_asignado: null
   })
     .populate('vehiculo_id', 'placa marca modelo color')
     .populate('cliente_id', 'nombre telefono')
@@ -124,18 +112,15 @@ ordenSchema.statics.obtenerHistorial = function(puntoId, fechaInicio, fechaFin) 
     punto_id: puntoId,
     estado: 'completada'
   };
-  
   if (fechaInicio && fechaFin) {
     const inicio = new Date(fechaInicio);
     const fin = new Date(fechaFin);
     fin.setHours(23, 59, 59, 999);
-    
     query.fecha_cobro = {
       $gte: inicio,
       $lte: fin
     };
   }
-  
   return this.find(query)
     .populate('vehiculo_id', 'placa marca modelo')
     .populate('lavador_asignado', 'nombre codigo')
