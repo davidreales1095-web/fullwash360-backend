@@ -1,4 +1,4 @@
-// frontend/src/pages/ordenes/OrdenesActivas.jsx - VERSIÓN FINAL CORREGIDA
+// frontend/src/pages/ordenes/OrdenesActivas.jsx - VERSIÓN FINAL CORREGIDA (58mm, nítido, vertical)
 import React, { useState, useEffect } from "react";
 import {
   Table, Button, Card, Typography, Tag, message,
@@ -42,22 +42,22 @@ const OrdenesActivas = () => {
   const [backendConectado, setBackendConectado] = useState(false);
 
   // ====================================================
-  // ✅ FUNCIÓN CORREGIDA PARA IMPRIMIR TICKET (VERSIÓN SIMPLIFICADA Y FUNCIONAL)
+  // ✅ FUNCIÓN CORREGIDA PARA IMPRESORA 58MM - NÍTIDA, VERTICAL, SIN COLORES
   // ====================================================
   const imprimirTicket = (orden, lavador, datosCobro) => {
     try {
       console.log("🖨️  Iniciando impresión del ticket...", { orden, lavador, datosCobro });
-      
+
       // Preparar datos del lavador
       let lavadorInfo = lavador;
       if (typeof lavador === 'string') {
-        lavadorInfo = lavadores.find(l => l._id === lavador) || { 
-          nombre: 'No asignado', 
-          codigo: 'N/A' 
+        lavadorInfo = lavadores.find(l => l._id === lavador) || {
+          nombre: 'No asignado',
+          codigo: 'N/A'
         };
       }
 
-      // Crear contenido HTML SIMPLE para impresión
+      // HTML optimizado para impresora térmica de 58mm
       const contenidoHTML = `
         <!DOCTYPE html>
         <html>
@@ -65,157 +65,120 @@ const OrdenesActivas = () => {
           <title>Ticket ${orden.numero_orden || 'ORD-0000'}</title>
           <meta charset="UTF-8">
           <style>
-            /* RESET PARA IMPRESIÓN */
-            @media print {
-              @page {
-                size: 80mm auto;
-                margin: 0mm;
-                padding: 0mm;
-              }
-              
-              body {
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 80mm !important;
-                max-width: 80mm !important;
-                font-family: 'Courier New', monospace !important;
-                font-size: 10px !important;
-                line-height: 1 !important;
-              }
-              
-              .no-print {
-                display: none !important;
-              }
-              
-              /* Forzar color negro para impresión */
-              * {
-                color: #000 !important;
-                background: transparent !important;
-              }
-              
-              .ticket-container {
-                width: 80mm !important;
-                padding: 5mm !important;
-                margin: 0 !important;
-              }
-            }
-            
-            /* ESTILOS PARA PANTALLA */
-            body {
-              font-family: Arial, sans-serif;
+            /* === RESETEAR TOTALMENTE PARA IMPRESIÓN === */
+            * {
               margin: 0;
-              padding: 10px;
-              background: white;
+              padding: 0;
+              box-sizing: border-box;
+              font-family: 'Courier New', Courier, monospace !important;
+              color: #000000 !important;
+              background: transparent !important;
+              border-color: #000000 !important;
+              font-weight: 500;
             }
-            
-            .ticket-container {
-              width: 80mm;
+
+            /* === CONFIGURACIÓN DE PÁGINA PARA 58mm === */
+            @page {
+              size: 58mm auto portrait;  /* Vertical, ancho fijo */
+              margin: 0mm;
+              padding: 0mm;
+            }
+
+            body {
+              width: 58mm;
               margin: 0 auto;
-              padding: 10px;
-              border: 1px solid #ddd;
+              padding: 2mm;
               background: white;
+              font-size: 10pt;           /* Puntos = más nítido en papel */
+              line-height: 1.2;
             }
-            
-            /* ENCABEZADO */
-            .header {
+
+            .ticket {
+              width: 100%;
+              border: 1px solid black;   /* Borde negro sólido */
+              padding: 3mm 2mm;
+            }
+
+            /* === NO IMPRIMIR ELEMENTOS AUXILIARES === */
+            .no-print {
+              display: none !important;
+            }
+
+            /* === ESTILOS DE TEXTO === */
+            .center {
               text-align: center;
-              margin-bottom: 10px;
-              padding-bottom: 5px;
-              border-bottom: 2px dashed #000;
             }
-            
-            .logo {
-              font-size: 18px;
-              font-weight: bold;
-              color: #1890ff;
-              margin-bottom: 2px;
+
+            .bold {
+              font-weight: 700;
             }
-            
-            .empresa {
-              font-size: 12px;
-              font-weight: bold;
+
+            .divider {
+              border-top: 1px solid black;
+              margin: 4px 0;
+              height: 0;
             }
-            
-            .slogan {
-              font-size: 9px;
-              color: #666;
-            }
-            
-            /* INFORMACIÓN */
+
             .info-row {
               display: flex;
               justify-content: space-between;
-              margin-bottom: 3px;
-              padding: 2px 0;
+              margin-bottom: 2px;
             }
-            
+
             .label {
-              font-weight: bold;
-              min-width: 45%;
+              font-weight: 700;
+              min-width: 42%;
             }
-            
+
             .value {
               text-align: right;
               font-weight: 500;
             }
-            
-            .divider {
-              border-top: 1px dashed #000;
-              margin: 8px 0;
-              height: 0;
-            }
-            
-            .totales {
-              margin: 10px 0;
-              padding: 10px;
-              background: #f6ffed;
-              border: 1px solid #b7eb8f;
+
+            .total-block {
+              margin: 6px 0;
+              padding: 4px 0;
+              border-top: 2px solid black;
+              border-bottom: 2px solid black;
               text-align: center;
             }
-            
-            .total-grande {
-              font-size: 18px;
-              font-weight: bold;
-              color: #52c41a;
-              margin: 5px 0;
+
+            .total-number {
+              font-size: 14pt;
+              font-weight: 700;
             }
-            
-            /* BOTÓN DE IMPRESIÓN */
-            .print-btn {
-              display: block;
-              width: 100%;
-              margin: 15px auto;
-              padding: 12px;
-              background: #1890ff;
-              color: white;
-              border: none;
-              border-radius: 4px;
-              font-size: 14px;
-              font-weight: bold;
-              cursor: pointer;
+
+            .footer {
+              margin-top: 8px;
+              font-size: 9pt;
               text-align: center;
             }
-            
-            .print-btn:hover {
-              background: #40a9ff;
+
+            /* === ESTILOS SOLO PARA PANTALLA (VISUALIZACIÓN PREVIA) === */
+            @media screen {
+              body {
+                background: white;
+                padding: 5mm;
+              }
+              .ticket {
+                box-shadow: 0 0 5px rgba(0,0,0,0.2);
+              }
             }
           </style>
         </head>
         <body>
-          <div class="ticket-container">
-            <!-- ENCABEZADO -->
-            <div class="header">
-              <div class="logo">🚗 FULLWASH 360</div>
-              <div class="empresa">LAVADO DE VEHÍCULOS</div>
-              <div class="slogan">Calidad y rapidez garantizada</div>
-            </div>
-            
-            <!-- INFORMACIÓN PRINCIPAL -->
+          <div class="ticket">
+            <!-- ========== ENCABEZADO ========== -->
+            <div class="center bold" style="font-size: 14pt;">🚗 FULLWASH 360</div>
+            <div class="center" style="font-size: 9pt;">LAVADO DE VEHÍCULOS</div>
+            <div class="center" style="font-size: 8pt; margin-bottom: 4px;">Calidad y rapidez garantizada</div>
+            <div class="divider"></div>
+
+            <!-- ========== NÚMERO DE TICKET Y FECHA ========== -->
             <div class="info-row">
               <span class="label">TICKET N°:</span>
               <span class="value">${orden.numero_orden || 'ORD-0000'}</span>
             </div>
-            
             <div class="info-row">
               <span class="label">FECHA/HORA:</span>
               <span class="value">${new Date().toLocaleDateString('es-CO', {
@@ -226,158 +189,127 @@ const OrdenesActivas = () => {
                 minute: '2-digit'
               })}</span>
             </div>
-            
             <div class="divider"></div>
-            
+
+            <!-- ========== DATOS DEL VEHÍCULO ========== -->
             <div class="info-row">
               <span class="label">PLACA:</span>
               <span class="value">${orden.placa?.toUpperCase() || 'SIN PLACA'}</span>
             </div>
-            
             <div class="info-row">
               <span class="label">VEHÍCULO:</span>
               <span class="value">${orden.tipo_vehiculo?.toUpperCase() || 'CARRO'}</span>
             </div>
-            
             <div class="info-row">
               <span class="label">SERVICIO:</span>
               <span class="value">${orden.servicios?.[0]?.nombre || 'Lavado Express'}</span>
             </div>
-            
             <div class="info-row">
               <span class="label">LAVADOR:</span>
               <span class="value">${lavadorInfo?.nombre || 'No asignado'}</span>
             </div>
-            
+
+            <!-- ========== CONTADOR DE LAVADAS ========== -->
             <div class="info-row">
               <span class="label">LAVADA N°:</span>
               <span class="value">
                 ${orden.contador_lavada || 1}/10
-                ${orden.es_decima_gratis ? ' - 🎉 GRATIS' : ''}
+                ${orden.es_decima_gratis ? '🎉 GRATIS' : ''}
               </span>
             </div>
-            
             <div class="divider"></div>
-            
-            <!-- DETALLES DE PAGO -->
-            <div class="totales">
-              <div>TOTAL A PAGAR:</div>
-              <div class="total-grande">
+
+            <!-- ========== TOTAL Y PAGO ========== -->
+            <div class="total-block">
+              <div style="font-size: 10pt;">TOTAL A PAGAR</div>
+              <div class="total-number">
                 ${orden.es_decima_gratis ? 'GRATIS 🎉' : `$${orden.total?.toLocaleString() || '0'}`}
               </div>
             </div>
-            
+
             <div class="info-row">
               <span class="label">MÉTODO DE PAGO:</span>
               <span class="value">${datosCobro?.metodo_pago?.toUpperCase() || 'EFECTIVO'}</span>
             </div>
-            
+
             ${datosCobro?.pago_recibido ? `
               <div class="info-row">
                 <span class="label">PAGO RECIBIDO:</span>
                 <span class="value">$${datosCobro.pago_recibido.toLocaleString()}</span>
               </div>
             ` : ''}
-            
+
             ${datosCobro?.vuelto > 0 ? `
               <div class="info-row">
                 <span class="label">VUELTO:</span>
                 <span class="value">$${datosCobro.vuelto.toLocaleString()}</span>
               </div>
             ` : ''}
-            
+
             <div class="divider"></div>
-            
-            <!-- PIE DE PÁGINA -->
-            <div style="text-align: center; margin-top: 15px;">
-              <div style="font-weight: bold; margin-bottom: 5px;">¡Gracias por su preferencia!</div>
-              <div style="font-size: 9px;">Sistema de fidelización 9+1</div>
-              <div style="font-size: 8px; color: #666; margin-top: 5px;">
+
+            <!-- ========== PIE DE PÁGINA ========== -->
+            <div class="footer">
+              <div class="bold">¡Gracias por su preferencia!</div>
+              <div style="font-size: 8pt;">Sistema de fidelización 9+1</div>
+              <div style="font-size: 7pt; margin-top: 2px;">
                 FULLWASH 360 • ${new Date().getFullYear()}
               </div>
             </div>
-            
-            <!-- BOTÓN DE IMPRESIÓN (visible solo en pantalla) -->
-            <button class="print-btn no-print" onclick="imprimirAhora()">
+
+            <!-- ========== BOTÓN DE IMPRESIÓN MANUAL (solo en pantalla) ========== -->
+            <button class="no-print" onclick="window.print()" style="
+              display: block;
+              width: 100%;
+              margin-top: 15px;
+              padding: 10px;
+              background: black;
+              color: white !important;
+              border: none;
+              border-radius: 4px;
+              font-size: 12px;
+              font-weight: bold;
+              cursor: pointer;
+            ">
               🖨️ IMPRIMIR TICKET
             </button>
-            
-            <div class="no-print" style="text-align: center; margin-top: 10px; font-size: 10px; color: #888;">
-              Si la impresión no inicia automáticamente, haga clic en el botón arriba.
-            </div>
           </div>
-          
+
           <script>
-            // Función para imprimir
-            function imprimirAhora() {
-              // Configurar página para impresión térmica
-              const style = document.createElement('style');
-              style.innerHTML = \`
-                @media print {
-                  @page { size: 80mm auto; margin: 0; }
-                  body { 
-                    margin: 0 !important; 
-                    padding: 0 !important;
-                    width: 80mm !important;
-                    font-family: 'Courier New', monospace !important;
-                    font-size: 10px !important;
-                  }
-                  .no-print { display: none !important; }
-                }
-              \`;
-              document.head.appendChild(style);
-              
-              // Pequeño delay para aplicar estilos
-              setTimeout(() => {
-                window.print();
-                
-                // Opcional: cerrar ventana después de imprimir
-                setTimeout(() => {
-                  if (window.confirm('¿Desea cerrar esta ventana?')) {
-                    window.close();
-                  }
-                }, 1000);
-              }, 50);
-            }
-            
-            // Intentar impresión automática al cargar
+            // Impresión automática al cargar la ventana
             window.onload = function() {
-              // Pequeño delay para asegurar carga completa
-              setTimeout(() => {
-                try {
-                  imprimirAhora();
-                } catch (error) {
-                  console.log('Impresión automática falló. Use el botón manual.');
-                }
-              }, 500);
+              setTimeout(function() {
+                window.print();
+                // Cerrar ventana automáticamente después de imprimir (opcional)
+                setTimeout(function() {
+                  window.close();
+                }, 800);
+              }, 300);
             };
           </script>
         </body>
         </html>
       `;
-      
+
       // Crear ventana para imprimir
       const ventanaImpresion = window.open('', '_blank', 'width=400,height=600,scrollbars=yes');
       
       if (!ventanaImpresion) {
-        // Si falla por bloqueador, mostrar mensaje
         message.warning(
           'Permite ventanas emergentes para imprimir. ' +
           'O usa Ctrl+P después de cobrar para imprimir manualmente.'
         );
         return;
       }
-      
-      // Escribir contenido en la ventana
+
       ventanaImpresion.document.open();
       ventanaImpresion.document.write(contenidoHTML);
       ventanaImpresion.document.close();
-      
-      console.log('✅ Ventana de ticket abierta correctamente');
-      
+
+      console.log('✅ Ticket generado para impresora 58mm');
     } catch (error) {
       console.error('❌ Error al generar el ticket:', error);
-      // No mostrar error al usuario para no interrumpir el flujo
+      // No interrumpir el flujo principal
     }
   };
 
