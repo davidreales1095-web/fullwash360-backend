@@ -42,277 +42,287 @@ const OrdenesActivas = () => {
   const [backendConectado, setBackendConectado] = useState(false);
 
   // ====================================================
-  // ✅ FUNCIÓN CORREGIDA PARA IMPRESORA 58MM - NÍTIDA, VERTICAL, SIN COLORES
-  // ====================================================
-  const imprimirTicket = (orden, lavador, datosCobro) => {
-    try {
-      console.log("🖨️  Iniciando impresión del ticket...", { orden, lavador, datosCobro });
+// ✅ FUNCIÓN CORREGIDA PARA IMPRESORA 58mm - NITIDEZ MÁXIMA
+// ====================================================
+const imprimirTicket = (orden, lavador, datosCobro) => {
+  try {
+    console.log("🖨️  Iniciando impresión del ticket...", { orden, lavador, datosCobro });
 
-      // Preparar datos del lavador
-      let lavadorInfo = lavador;
-      if (typeof lavador === 'string') {
-        lavadorInfo = lavadores.find(l => l._id === lavador) || {
-          nombre: 'No asignado',
-          codigo: 'N/A'
-        };
-      }
+    // Preparar datos del lavador
+    let lavadorInfo = lavador;
+    if (typeof lavador === 'string') {
+      lavadorInfo = lavadores.find(l => l._id === lavador) || {
+        nombre: 'No asignado',
+        codigo: 'N/A'
+      };
+    }
 
-      // HTML optimizado para impresora térmica de 58mm
-      const contenidoHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Ticket ${orden.numero_orden || 'ORD-0000'}</title>
-          <meta charset="UTF-8">
-          <style>
-            /* === RESETEAR TOTALMENTE PARA IMPRESIÓN === */
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-              font-family: 'Courier New', Courier, monospace !important;
-              color: #000000 !important;
-              background: transparent !important;
-              border-color: #000000 !important;
-              font-weight: 500;
-            }
-
-            /* === CONFIGURACIÓN DE PÁGINA PARA 58mm === */
+    // HTML optimizado para máxima nitidez en 58mm
+    const contenidoHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Ticket ${orden.numero_orden || 'ORD-0000'}</title>
+        <meta charset="UTF-8">
+        <style>
+          /* === CONFIGURACIÓN DE ALTA CALIDAD PARA IMPRESIÓN === */
+          @media print {
             @page {
-              size: 58mm auto portrait;  /* Vertical, ancho fijo */
+              size: 58mm auto portrait;
               margin: 0mm;
               padding: 0mm;
             }
-
+            
             body {
-              width: 58mm;
-              margin: 0 auto;
-              padding: 2mm;
+              margin: 0 !important;
+              padding: 2mm !important;
+              width: 58mm !important;
+              background: white !important;
+              color: #000000 !important;
+              font-family: 'Courier New', Courier, monospace !important;
+              font-size: 11pt !important;      /* Ligero aumento para mejor legibilidad */
+              line-height: 1.2 !important;
+              font-weight: 700 !important;      /* Negrita general */
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              color-adjust: exact !important;
+              -webkit-font-smoothing: antialiased !important;
+              text-rendering: optimizeLegibility !important;
+            }
+          }
+
+          /* === ESTILOS BASE (también aplican en pantalla) === */
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace !important;
+            color: #000000 !important;
+            background: transparent !important;
+            border-color: #000000 !important;
+            font-weight: 700 !important;        /* Todo negrita por defecto */
+          }
+
+          body {
+            width: 58mm;
+            margin: 0 auto;
+            padding: 2mm;
+            background: white;
+            font-size: 11pt;
+            line-height: 1.2;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+          }
+
+          .ticket {
+            width: 100%;
+            border: 1.2pt solid black;          /* Borde más grueso */
+            padding: 3mm 2mm;
+          }
+
+          .no-print {
+            display: none !important;
+          }
+
+          .center {
+            text-align: center;
+          }
+
+          .bold {
+            font-weight: 900 !important;        /* Extra bold */
+          }
+
+          .divider {
+            border-top: 1.2pt solid black;      /* Línea más gruesa */
+            margin: 5px 0;
+            height: 0;
+          }
+
+          .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+          }
+
+          .label {
+            font-weight: 900 !important;        /* Máxima negrita */
+            min-width: 42%;
+          }
+
+          .value {
+            text-align: right;
+            font-weight: 700 !important;
+          }
+
+          .total-block {
+            margin: 8px 0;
+            padding: 6px 0;
+            border-top: 2pt solid black;
+            border-bottom: 2pt solid black;
+            text-align: center;
+          }
+
+          .total-number {
+            font-size: 16pt;                   /* Más grande y negrita */
+            font-weight: 900 !important;
+          }
+
+          .footer {
+            margin-top: 8px;
+            font-size: 10pt;
+            text-align: center;
+          }
+
+          /* === SOLO PARA VISTA PREVIA EN PANTALLA === */
+          @media screen {
+            body {
               background: white;
-              font-size: 10pt;           /* Puntos = más nítido en papel */
-              line-height: 1.2;
+              padding: 5mm;
             }
-
             .ticket {
-              width: 100%;
-              border: 1px solid black;   /* Borde negro sólido */
-              padding: 3mm 2mm;
+              box-shadow: 0 0 5px rgba(0,0,0,0.2);
             }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="ticket">
+          <!-- ENCABEZADO -->
+          <div class="center bold" style="font-size: 16pt;">🚗 FULLWASH 360</div>
+          <div class="center" style="font-size: 11pt; font-weight: 700;">LAVADO DE VEHÍCULOS</div>
+          <div class="center" style="font-size: 9pt; font-weight: 700; margin-bottom: 4px;">Calidad y rapidez garantizada</div>
+          <div class="divider"></div>
 
-            /* === NO IMPRIMIR ELEMENTOS AUXILIARES === */
-            .no-print {
-              display: none !important;
-            }
+          <!-- TICKET Y FECHA -->
+          <div class="info-row">
+            <span class="label">TICKET N°:</span>
+            <span class="value">${orden.numero_orden || 'ORD-0000'}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">FECHA/HORA:</span>
+            <span class="value">${new Date().toLocaleDateString('es-CO', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</span>
+          </div>
+          <div class="divider"></div>
 
-            /* === ESTILOS DE TEXTO === */
-            .center {
-              text-align: center;
-            }
-
-            .bold {
-              font-weight: 700;
-            }
-
-            .divider {
-              border-top: 1px solid black;
-              margin: 4px 0;
-              height: 0;
-            }
-
-            .info-row {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 2px;
-            }
-
-            .label {
-              font-weight: 700;
-              min-width: 42%;
-            }
-
-            .value {
-              text-align: right;
-              font-weight: 500;
-            }
-
-            .total-block {
-              margin: 6px 0;
-              padding: 4px 0;
-              border-top: 2px solid black;
-              border-bottom: 2px solid black;
-              text-align: center;
-            }
-
-            .total-number {
-              font-size: 14pt;
-              font-weight: 700;
-            }
-
-            .footer {
-              margin-top: 8px;
-              font-size: 9pt;
-              text-align: center;
-            }
-
-            /* === ESTILOS SOLO PARA PANTALLA (VISUALIZACIÓN PREVIA) === */
-            @media screen {
-              body {
-                background: white;
-                padding: 5mm;
-              }
-              .ticket {
-                box-shadow: 0 0 5px rgba(0,0,0,0.2);
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="ticket">
-            <!-- ========== ENCABEZADO ========== -->
-            <div class="center bold" style="font-size: 14pt;">🚗 FULLWASH 360</div>
-            <div class="center" style="font-size: 9pt;">LAVADO DE VEHÍCULOS</div>
-            <div class="center" style="font-size: 8pt; margin-bottom: 4px;">Calidad y rapidez garantizada</div>
-            <div class="divider"></div>
-
-            <!-- ========== NÚMERO DE TICKET Y FECHA ========== -->
-            <div class="info-row">
-              <span class="label">TICKET N°:</span>
-              <span class="value">${orden.numero_orden || 'ORD-0000'}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">FECHA/HORA:</span>
-              <span class="value">${new Date().toLocaleDateString('es-CO', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}</span>
-            </div>
-            <div class="divider"></div>
-
-            <!-- ========== DATOS DEL VEHÍCULO ========== -->
-            <div class="info-row">
-              <span class="label">PLACA:</span>
-              <span class="value">${orden.placa?.toUpperCase() || 'SIN PLACA'}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">VEHÍCULO:</span>
-              <span class="value">${orden.tipo_vehiculo?.toUpperCase() || 'CARRO'}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">SERVICIO:</span>
-              <span class="value">${orden.servicios?.[0]?.nombre || 'Lavado Express'}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">LAVADOR:</span>
-              <span class="value">${lavadorInfo?.nombre || 'No asignado'}</span>
-            </div>
-
-            <!-- ========== CONTADOR DE LAVADAS ========== -->
-            <div class="info-row">
-              <span class="label">LAVADA N°:</span>
-              <span class="value">
-                ${orden.contador_lavada || 1}/10
-                ${orden.es_decima_gratis ? '🎉 GRATIS' : ''}
-              </span>
-            </div>
-            <div class="divider"></div>
-
-            <!-- ========== TOTAL Y PAGO ========== -->
-            <div class="total-block">
-              <div style="font-size: 10pt;">TOTAL A PAGAR</div>
-              <div class="total-number">
-                ${orden.es_decima_gratis ? 'GRATIS 🎉' : `$${orden.total?.toLocaleString() || '0'}`}
-              </div>
-            </div>
-
-            <div class="info-row">
-              <span class="label">MÉTODO DE PAGO:</span>
-              <span class="value">${datosCobro?.metodo_pago?.toUpperCase() || 'EFECTIVO'}</span>
-            </div>
-
-            ${datosCobro?.pago_recibido ? `
-              <div class="info-row">
-                <span class="label">PAGO RECIBIDO:</span>
-                <span class="value">$${datosCobro.pago_recibido.toLocaleString()}</span>
-              </div>
-            ` : ''}
-
-            ${datosCobro?.vuelto > 0 ? `
-              <div class="info-row">
-                <span class="label">VUELTO:</span>
-                <span class="value">$${datosCobro.vuelto.toLocaleString()}</span>
-              </div>
-            ` : ''}
-
-            <div class="divider"></div>
-
-            <!-- ========== PIE DE PÁGINA ========== -->
-            <div class="footer">
-              <div class="bold">¡Gracias por su preferencia!</div>
-              <div style="font-size: 8pt;">Sistema de fidelización 9+1</div>
-              <div style="font-size: 7pt; margin-top: 2px;">
-                FULLWASH 360 • ${new Date().getFullYear()}
-              </div>
-            </div>
-
-            <!-- ========== BOTÓN DE IMPRESIÓN MANUAL (solo en pantalla) ========== -->
-            <button class="no-print" onclick="window.print()" style="
-              display: block;
-              width: 100%;
-              margin-top: 15px;
-              padding: 10px;
-              background: black;
-              color: white !important;
-              border: none;
-              border-radius: 4px;
-              font-size: 12px;
-              font-weight: bold;
-              cursor: pointer;
-            ">
-              🖨️ IMPRIMIR TICKET
-            </button>
+          <!-- VEHÍCULO -->
+          <div class="info-row">
+            <span class="label">PLACA:</span>
+            <span class="value">${orden.placa?.toUpperCase() || 'SIN PLACA'}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">VEHÍCULO:</span>
+            <span class="value">${orden.tipo_vehiculo?.toUpperCase() || 'CARRO'}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">SERVICIO:</span>
+            <span class="value">${orden.servicios?.[0]?.nombre || 'Lavado Express'}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">LAVADOR:</span>
+            <span class="value">${lavadorInfo?.nombre || 'No asignado'}</span>
           </div>
 
-          <script>
-            // Impresión automática al cargar la ventana
-            window.onload = function() {
+          <!-- CONTADOR -->
+          <div class="info-row">
+            <span class="label">LAVADA N°:</span>
+            <span class="value">
+              ${orden.contador_lavada || 1}/10
+              ${orden.es_decima_gratis ? '🎉 GRATIS' : ''}
+            </span>
+          </div>
+          <div class="divider"></div>
+
+          <!-- TOTAL Y PAGO -->
+          <div class="total-block">
+            <div style="font-size: 11pt; font-weight: 700;">TOTAL A PAGAR</div>
+            <div class="total-number">
+              ${orden.es_decima_gratis ? 'GRATIS 🎉' : `$${orden.total?.toLocaleString() || '0'}`}
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="label">MÉTODO DE PAGO:</span>
+            <span class="value">${datosCobro?.metodo_pago?.toUpperCase() || 'EFECTIVO'}</span>
+          </div>
+
+          ${datosCobro?.pago_recibido ? `
+            <div class="info-row">
+              <span class="label">PAGO RECIBIDO:</span>
+              <span class="value">$${datosCobro.pago_recibido.toLocaleString()}</span>
+            </div>
+          ` : ''}
+
+          ${datosCobro?.vuelto > 0 ? `
+            <div class="info-row">
+              <span class="label">VUELTO:</span>
+              <span class="value">$${datosCobro.vuelto.toLocaleString()}</span>
+            </div>
+          ` : ''}
+
+          <div class="divider"></div>
+
+          <!-- PIE -->
+          <div class="footer">
+            <div style="font-weight: 900; font-size: 11pt;">¡Gracias por su preferencia!</div>
+            <div style="font-size: 9pt; font-weight: 700;">Sistema de fidelización 9+1</div>
+            <div style="font-size: 8pt; font-weight: 700; margin-top: 2px;">
+              FULLWASH 360 • ${new Date().getFullYear()}
+            </div>
+          </div>
+
+          <!-- BOTÓN DE IMPRESIÓN MANUAL -->
+          <button class="no-print" onclick="window.print()" style="
+            display: block;
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            background: black;
+            color: white !important;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+          ">
+            🖨️ IMPRIMIR TICKET
+          </button>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
               setTimeout(function() {
-                window.print();
-                // Cerrar ventana automáticamente después de imprimir (opcional)
-                setTimeout(function() {
-                  window.close();
-                }, 800);
-              }, 300);
-            };
-          </script>
-        </body>
-        </html>
-      `;
+                window.close();
+              }, 800);
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `;
 
-      // Crear ventana para imprimir
-      const ventanaImpresion = window.open('', '_blank', 'width=400,height=600,scrollbars=yes');
-      
-      if (!ventanaImpresion) {
-        message.warning(
-          'Permite ventanas emergentes para imprimir. ' +
-          'O usa Ctrl+P después de cobrar para imprimir manualmente.'
-        );
-        return;
-      }
-
-      ventanaImpresion.document.open();
-      ventanaImpresion.document.write(contenidoHTML);
-      ventanaImpresion.document.close();
-
-      console.log('✅ Ticket generado para impresora 58mm');
-    } catch (error) {
-      console.error('❌ Error al generar el ticket:', error);
-      // No interrumpir el flujo principal
+    const ventanaImpresion = window.open('', '_blank', 'width=400,height=600,scrollbars=yes');
+    if (!ventanaImpresion) {
+      message.warning('Permite ventanas emergentes para imprimir. O usa Ctrl+P.');
+      return;
     }
-  };
 
+    ventanaImpresion.document.open();
+    ventanaImpresion.document.write(contenidoHTML);
+    ventanaImpresion.document.close();
+
+    console.log('✅ Ticket generado con nitidez máxima');
+  } catch (error) {
+    console.error('❌ Error al generar el ticket:', error);
+  }
+};
   // ====================================================
   // ✅ FUNCIÓN MODIFICADA PARA COBRAR CON IMPRESIÓN (CORREGIDA)
   // ====================================================
