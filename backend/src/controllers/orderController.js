@@ -144,7 +144,7 @@ const createOrder = async (req, res) => {
     }
 
     const precio = Number(precio_manual);
-    if (precio <= 0 || isNaN(precio)) {
+    if (precio < 0 || isNaN(precio)) {
       return res.status(400).json({ success: false, message: 'Precio inválido' });
     }
 

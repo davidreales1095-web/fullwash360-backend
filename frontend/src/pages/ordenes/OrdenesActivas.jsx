@@ -206,7 +206,7 @@ const OrdenesActivas = () => {
             <div class="info-row">
               <span class="label">LAVADA N°:</span>
               <span class="value">
-                ${orden.contador_lavada || 1}/8          {/* ✅ Cambiado 10 → 8 */}
+                ${orden.contador_lavada || 1}/8          
                 ${orden.es_decima_gratis ? '🎉 GRATIS' : ''}
               </span>
             </div>
