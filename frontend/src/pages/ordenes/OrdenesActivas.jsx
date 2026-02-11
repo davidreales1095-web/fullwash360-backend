@@ -242,7 +242,7 @@ const OrdenesActivas = () => {
 
             <div class="footer">
               <div style="font-weight: 900; font-size: 11pt;">¡Gracias por su preferencia!</div>
-              <div style="font-size: 9pt; font-weight: 700;">Sistema de fidelización 7+1</div> {/* ✅ Cambiado 9+1 → 7+1 */}
+              <div style="font-size: 9pt; font-weight: 700;">Sistema de fidelización 7+1</div> 
               <div style="font-size: 8pt; font-weight: 700; margin-top: 2px;">
                 FULLWASH 360 • ${new Date().getFullYear()}
               </div>
